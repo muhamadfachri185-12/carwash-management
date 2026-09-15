@@ -1,8 +1,8 @@
-import { createContext, useContext, useState } from "react"
-import { api } from "../lib/axios"
+import { createContext, useContext, useState, useEffect } from "react"
+import axios from "../lib/axios"
 
 type User = {
-  id: string
+  id: number
   name: string
   email: string
   role: "ADMIN" | "STAFF"
@@ -11,8 +11,10 @@ type User = {
 type AuthContextType = {
   user: User | null
   token: string | null
-  login: (email: string, password: string) => Promise<void>
+  login: (token: string, user: User) => void
   logout: () => void
+  isAuthenticated: boolean
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -22,28 +24,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(
     localStorage.getItem("token"),
   )
+  const [loading, setLoading] = useState<boolean>(true)
 
-  const login = async (email: string, password: string) => {
-    const response = await api.post("/auth/login", {
-      email,
-      password,
-    })
+  // Ambil data autentikasi dari LocalStorage saat aplikasi dimuat dengan memanggil endpoint /api/auth/me
+  useEffect(() => {
+    const verifyToken = async () => {
+      if (!token) {
+        setLoading(false)
+        return
+      }
 
-    const { token, user } = response.data
-    localStorage.setItem("token", token)
-    setToken(token)
-    setUser(user)
+      try {
+        const token = localStorage.getItem("token")
 
-    api.defaults.headers.common.Authorization = `Bearer ${token}`
+        const response = await axios.get("/auth/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        setUser(response.data.user)
+      } catch (error) {
+        // Jika token invalid atau expired, maka hapus sesi dan logout
+        logout()
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    verifyToken()
+  }, [token])
+
+  const login = (newToken: string, newUser: User) => {
+    localStorage.setItem("token", newToken)
+    setToken(newToken)
+    setUser(newUser)
   }
 
   const logout = () => {
     localStorage.removeItem("token")
-
     setToken(null)
     setUser(null)
-
-    delete api.defaults.headers.common.Authorization
   }
 
   return (
@@ -53,6 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         login,
         logout,
+        isAuthenticated: !!token && !!user,
+        loading,
       }}
     >
       {children}
