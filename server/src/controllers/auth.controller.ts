@@ -16,7 +16,7 @@ export const register = async (req: Request, res: Response) => {
     })
   }
 
-  const { name, email, password } = result.data
+  const { name, email, password, role } = result.data
 
   const existingUser = await prisma.user.findUnique({
     where: {
@@ -37,6 +37,7 @@ export const register = async (req: Request, res: Response) => {
       name,
       email,
       passwordHash,
+      role,
     },
     select: {
       id: true,
@@ -63,7 +64,7 @@ export const login = async (req: Request, res: Response) => {
     })
   }
 
-  const { email, password } = result.data
+  const { email, password, role } = result.data
 
   const user = await prisma.user.findUnique({
     where: {
@@ -74,6 +75,13 @@ export const login = async (req: Request, res: Response) => {
   if (!user) {
     return res.status(401).json({
       message: "Invalid email or password",
+    })
+  }
+
+  // VALIDASI ROLE SESUAI DATABASE
+  if (user.role !== role) {
+    return res.status(403).json({
+      message: `Akun ini terdaftar sebagai ${user.role}, bukan ${role}`,
     })
   }
 
@@ -102,36 +110,33 @@ export const login = async (req: Request, res: Response) => {
   })
 }
 
-export const me = async(
-    req: AuthRequest,
-    res: Response
-) => {
-    if (!req.user){
-        return res.status(401).json({
-            message: "Authentication required"
-        })
-    }
-
-    const user = await prisma.user.findUnique({
-        where: {
-            id: req.user.userId,
-        },
-        select: {
-            id: true,
-            name:true,
-            email: true,
-            role: true,
-            createdAt: true
-        }
+export const me = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({
+      message: "Authentication required",
     })
+  }
 
-    if(!user){
-        return res.status(404).json({
-            message: "User not found",
-        })
-    }
+  const user = await prisma.user.findUnique({
+    where: {
+      id: req.user.userId,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      createdAt: true,
+    },
+  })
 
-    return res.status(200).json({
-        user
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found",
     })
+  }
+
+  return res.status(200).json({
+    user,
+  })
 }

@@ -83,11 +83,26 @@ export const updateCustomer = async (req: AuthRequest, res: Response) => {
 export const deleteCustomer = async (req: AuthRequest, res: Response) => {
   const { id } = req.params
 
+  const customerId = Number(id)
+
   const existingCustomer = await prisma.customer.findUnique({
     where: {
-      id: Number(id),
+      id: customerId,
     },
   })
+
+  // Cek apakah customer memiliki order
+  const existingOrder = await prisma.order.findFirst({
+    where: {
+      customerId: customerId,
+    },
+  })
+
+  if (existingOrder) {
+    return res.status(400).json({
+      message: "Customer tidak dapat dihapus karena memilik order",
+    })
+  }
 
   if (!existingCustomer) {
     return res.status(404).json({
@@ -96,7 +111,7 @@ export const deleteCustomer = async (req: AuthRequest, res: Response) => {
   }
   await prisma.customer.delete({
     where: {
-      id: Number(id),
+      id: customerId,
     },
   })
 

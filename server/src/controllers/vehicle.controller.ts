@@ -89,6 +89,12 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
         id: Number(result.data.customerId),
       },
     })
+
+    if (!customer) {
+      return res.status(400).json({
+        message: "Customer not found",
+      })
+    }
   }
 
   const vehicle = await prisma.vehicle.update({
@@ -109,28 +115,28 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
   })
 }
 
-export const deleteVehicle = async (req:AuthRequest, res: Response) => {
-    const {id} = req.params
+export const deleteVehicle = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params
 
-    const existingVehicle = await prisma.vehicle.findUnique({
-        where: {
-            id: Number(id)
-        }
+  const existingVehicle = await prisma.vehicle.findUnique({
+    where: {
+      id: Number(id),
+    },
+  })
+
+  if (!existingVehicle) {
+    return res.status(404).json({
+      message: "Vehicle not found",
     })
+  }
 
-    if (!existingVehicle){
-        return res.status(404).json({
-            message: "Vehicle not found"
-        })
-    }
+  await prisma.vehicle.delete({
+    where: {
+      id: Number(id),
+    },
+  })
 
-    await prisma.vehicle.delete({
-        where: {
-            id: Number(id)
-        }
-    })
-
-    return res.status(200).json({
-        message: "Vehicle deleted succesfully"
-    })
+  return res.status(200).json({
+    message: "Vehicle deleted succesfully",
+  })
 }
