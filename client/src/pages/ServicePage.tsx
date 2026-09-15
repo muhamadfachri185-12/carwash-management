@@ -33,6 +33,14 @@ import {
   CircleDollarSign,
 } from "lucide-react"
 
+// Interface digunakan untuk menentukan bentuk/type data Service.
+//
+// Jadi setiap object service harus punya:
+// id       -> number
+// name     -> string
+// duration -> number
+// price    -> number
+// isActive -> boolean
 interface Service {
   id: number
   name: string
@@ -42,12 +50,18 @@ interface Service {
 }
 
 export default function ServicePage() {
+  // Array services digunakan untuk menyimpan semua data layanan
+  // yang didapatkan dari backend.
   const [services, setServices] = useState<Service[]>([])
 
   // =========================
   // FORM STATE
   // =========================
 
+  // State untuk form TAMBAH layanan.
+  //
+  // Walaupun duration dan price nantinya dikirim sebagai number,
+  // input HTML tetap menghasilkan value berupa string.
   const [name, setName] = useState("")
   const [duration, setDuration] = useState("")
   const [price, setPrice] = useState("")
@@ -56,7 +70,14 @@ export default function ServicePage() {
   // EDIT STATE
   // =========================
 
+  // editingId digunakan untuk mengetahui apakah
+  // sekarang kita sedang mengedit sebuah service.
+  //
+  // null = tidak sedang edit
+  // number = sedang edit service dengan ID tersebut
   const [editingId, setEditingId] = useState<number | null>(null)
+
+  // State khusus untuk form EDIT.
   const [editName, setEditName] = useState("")
   const [editDuration, setEditDuration] = useState("")
   const [editPrice, setEditPrice] = useState("")
@@ -65,51 +86,94 @@ export default function ServicePage() {
   // LOADING & ERROR
   // =========================
 
+  // loading digunakan ketika proses create/update sedang berlangsung.
   const [loading, setLoading] = useState(false)
+
+  // fetching digunakan ketika mengambil daftar service dari backend.
+  //
+  // Dibedakan dari loading supaya:
+  // fetching = loading data table
+  // loading = menyimpan data form
   const [fetching, setFetching] = useState(true)
+
+  // Menyimpan pesan error untuk ditampilkan ke user.
   const [error, setError] = useState("")
 
   // =========================
   // SEARCH & FILTER
   // =========================
 
+  // Menyimpan keyword pencarian.
   const [searchQuery, setSearchQuery] = useState("")
+
+  // Menyimpan filter status.
+  //
+  // Nilainya bisa:
+  // ALL
+  // ACTIVE
+  // INACTIVE
   const [statusFilter, setStatusFilter] = useState("ALL")
 
   // =========================
   // FORM DIALOG
   // =========================
 
+  // true  = dialog tambah/edit terbuka
+  // false = dialog tertutup
   const [formDialogOpen, setFormDialogOpen] = useState(false)
 
   // =========================
   // DELETE DIALOG
   // =========================
 
+  // Mengontrol dialog konfirmasi delete.
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  // Menyimpan service yang akan dihapus.
+  //
+  // null berarti belum memilih service.
   const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null)
+
+  // Loading khusus ketika proses delete.
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   // =========================
   // FETCH SERVICES
   // =========================
 
+  // Function untuk mengambil data service dari backend.
   const fetchServices = async () => {
     try {
+      // Tampilkan status loading pada table
       setFetching(true)
 
+      // GET request ke:
+      // http://localhost:3000/api/services
+      //
+      // Karena baseURL Axios sudah berisi /api,
+      // di sini cukup menggunakan "/services".
       const res = await axios.get("/services")
 
+      // Simpan data services dari response backend
+      // ke state React.
       setServices(res.data.services)
     } catch (err: any) {
+      // Kalau request gagal, masuk ke catch.
       console.error("Gagal memuat data layanan", err)
 
+      // Ambil pesan error dari backend jika tersedia.
       setError(err.response?.data?.message || "Gagal memuat data layanan.")
     } finally {
+      // finally selalu dijalankan,
+      // baik request berhasil maupun gagal.
       setFetching(false)
     }
   }
 
+  // useEffect dengan [] hanya dijalankan sekali
+  // ketika component pertama kali ditampilkan.
+  //
+  // Cocok digunakan untuk mengambil data awal dari API.
   useEffect(() => {
     fetchServices()
   }, [])
@@ -118,16 +182,22 @@ export default function ServicePage() {
   // RESET FORM
   // =========================
 
+  // Mengembalikan semua state form ke kondisi awal.
   const resetForm = () => {
+    // Reset form tambah
     setName("")
     setDuration("")
     setPrice("")
 
+    // Reset form edit
     setEditName("")
     setEditDuration("")
     setEditPrice("")
 
+    // Tidak sedang edit
     setEditingId(null)
+
+    // Bersihkan error
     setError("")
   }
 
@@ -136,7 +206,11 @@ export default function ServicePage() {
   // =========================
 
   const handleAdd = () => {
+    // Pastikan form bersih sebelum digunakan
+    // untuk menambahkan service baru.
     resetForm()
+
+    // Buka dialog
     setFormDialogOpen(true)
   }
 
@@ -145,21 +219,37 @@ export default function ServicePage() {
   // =========================
 
   const handleCreateService = async (e: React.FormEvent<HTMLFormElement>) => {
+    // Mencegah browser reload ketika form submit.
     e.preventDefault()
 
     setLoading(true)
     setError("")
 
     try {
+      // POST digunakan untuk membuat data baru.
       await axios.post("/services", {
         name,
+
+        // Input HTML menghasilkan string.
+        // Backend membutuhkan number.
+        //
+        // Contoh:
+        // "45" -> 45
         duration: Number(duration),
+
+        // Contoh:
+        // "35000" -> 35000
         price: Number(price),
       })
 
+      // Setelah berhasil:
+      // 1. Bersihkan form
+      // 2. Tutup dialog
       resetForm()
       setFormDialogOpen(false)
 
+      // Ambil ulang data supaya table langsung
+      // menampilkan service yang baru dibuat.
       await fetchServices()
     } catch (err: any) {
       console.error(err)
@@ -175,13 +265,23 @@ export default function ServicePage() {
   // =========================
 
   const handleEditStart = (service: Service) => {
+    // Simpan ID service yang sedang diedit.
     setEditingId(service.id)
 
+    // Isi form edit menggunakan data service yang dipilih.
     setEditName(service.name)
+
+    // Karena state input berupa string,
+    // number harus diubah menjadi string.
+    //
+    // Contoh:
+    // 45 -> "45"
     setEditDuration(String(service.duration))
     setEditPrice(String(service.price))
 
     setError("")
+
+    // Buka dialog form.
     setFormDialogOpen(true)
   }
 
@@ -192,21 +292,32 @@ export default function ServicePage() {
   const handleEditSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
+    // Kalau tidak ada editingId,
+    // berarti tidak ada service yang sedang diedit.
     if (!editingId) return
 
     setLoading(true)
     setError("")
 
     try {
+      // PATCH digunakan untuk mengubah sebagian data.
+      //
+      // URL akan menjadi:
+      // /services/1
+      // /services/2
+      // dst.
       await axios.patch(`/services/${editingId}`, {
         name: editName,
         duration: Number(editDuration),
         price: Number(editPrice),
       })
 
+      // Setelah berhasil update,
+      // bersihkan form dan tutup dialog.
       resetForm()
       setFormDialogOpen(false)
 
+      // Ambil data terbaru dari backend.
       await fetchServices()
     } catch (err: any) {
       console.error(err)
@@ -222,7 +333,10 @@ export default function ServicePage() {
   // =========================
 
   const handleFormCancel = () => {
+    // Bersihkan semua data form
     resetForm()
+
+    // Tutup dialog
     setFormDialogOpen(false)
   }
 
@@ -232,10 +346,24 @@ export default function ServicePage() {
 
   const handleToggleActive = async (service: Service) => {
     try {
+      // Kita mengirim kebalikan dari status sekarang.
+      //
+      // Kalau:
+      // isActive = true
+      //
+      // maka:
+      // !true = false
+      //
+      // Kalau:
+      // isActive = false
+      //
+      // maka:
+      // !false = true
       await axios.patch(`/services/${service.id}`, {
         isActive: !service.isActive,
       })
 
+      // Ambil data terbaru setelah status berubah.
       await fetchServices()
     } catch (err: any) {
       console.error(err)
@@ -249,7 +377,10 @@ export default function ServicePage() {
   // =========================
 
   const openDeleteDialog = (service: Service) => {
+    // Simpan service yang ingin dihapus.
     setServiceToDelete(service)
+
+    // Buka dialog konfirmasi.
     setDeleteDialogOpen(true)
   }
 
@@ -258,17 +389,24 @@ export default function ServicePage() {
   // =========================
 
   const handleDeleteConfirm = async () => {
+    // Kalau belum ada service yang dipilih,
+    // jangan lakukan apa-apa.
     if (!serviceToDelete) return
 
     setDeleteLoading(true)
     setError("")
 
     try {
+      // DELETE request berdasarkan ID service.
       await axios.delete(`/services/${serviceToDelete.id}`)
 
+      // Tutup dialog setelah berhasil.
       setDeleteDialogOpen(false)
+
+      // Bersihkan service yang dipilih.
       setServiceToDelete(null)
 
+      // Ambil data terbaru.
       await fetchServices()
     } catch (err: any) {
       console.error(err)
@@ -283,25 +421,51 @@ export default function ServicePage() {
   // FILTER & SEARCH
   // =========================
 
+  // filter() membuat array baru berdasarkan kondisi tertentu.
+  //
+  // services = semua service
+  // filteredServices = service yang sesuai pencarian/filter
   const filteredServices = services.filter((service) => {
+    // =========================
+    // SEARCH
+    // =========================
+
     if (searchQuery) {
+      // Ubah nama service dan keyword menjadi lowercase
+      // supaya pencarian tidak memperhatikan huruf besar/kecil.
+      //
+      // "Cuci Salju".toLowerCase()
+      // menjadi:
+      // "cuci salju"
       const matchesSearch = service.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
 
+      // Kalau nama service tidak mengandung keyword,
+      // service tersebut tidak dimasukkan ke hasil.
       if (!matchesSearch) {
         return false
       }
     }
 
+    // =========================
+    // STATUS FILTER
+    // =========================
+
+    // Kalau filter ACTIVE,
+    // buang service yang tidak aktif.
     if (statusFilter === "ACTIVE" && !service.isActive) {
       return false
     }
 
+    // Kalau filter INACTIVE,
+    // buang service yang aktif.
     if (statusFilter === "INACTIVE" && service.isActive) {
       return false
     }
 
+    // Kalau lolos semua kondisi,
+    // masukkan service ke hasil filter.
     return true
   })
 
@@ -326,6 +490,10 @@ export default function ServicePage() {
           </p>
         </div>
 
+        {/* 
+          Ketika button diklik,
+          function handleAdd dijalankan.
+        */}
         <Button onClick={handleAdd} className='bg-blue-600 hover:bg-blue-700'>
           <Plus className='mr-2 h-4 w-4' />
           Tambah Layanan
@@ -336,6 +504,13 @@ export default function ServicePage() {
           GLOBAL ERROR
       ========================= */}
 
+      {/*
+        Error hanya ditampilkan di luar dialog
+        kalau formDialogOpen = false.
+
+        Tujuannya supaya error form tidak muncul
+        sekaligus di global error.
+      */}
       {error && !formDialogOpen && (
         <div className='rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600'>
           {error}
@@ -354,7 +529,9 @@ export default function ServicePage() {
         </div>
 
         <div className='grid gap-4 md:grid-cols-2'>
-          {/* Search */}
+          {/* =========================
+              SEARCH
+          ========================= */}
 
           <div className='space-y-2'>
             <Label htmlFor='search-service'>Nama Layanan</Label>
@@ -363,14 +540,18 @@ export default function ServicePage() {
               <Input
                 id='search-service'
                 placeholder='Cari nama layanan...'
+                // Input dikontrol oleh React state.
                 value={searchQuery}
+                // Update searchQuery setiap user mengetik.
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className='pl-9'
               />
             </div>
           </div>
 
-          {/* Status */}
+          {/* =========================
+              STATUS FILTER
+          ========================= */}
 
           <div className='space-y-2'>
             <Label htmlFor='status-filter'>Status Layanan</Label>
@@ -390,7 +571,9 @@ export default function ServicePage() {
           </div>
         </div>
 
-        {/* Result Info */}
+        {/* =========================
+            RESULT INFO
+        ========================= */}
 
         <div className='mt-4 flex flex-col gap-3 border-t border-gray-200 pt-4 sm:flex-row sm:items-center sm:justify-between'>
           <p className='text-sm text-gray-500'>
@@ -405,12 +588,19 @@ export default function ServicePage() {
             layanan
           </p>
 
+          {/* 
+            Tombol Reset hanya muncul kalau
+            user sedang menggunakan search atau filter.
+          */}
           {(searchQuery || statusFilter !== "ALL") && (
             <Button
               variant='outline'
               size='sm'
               onClick={() => {
+                // Kembalikan search ke kosong
                 setSearchQuery("")
+
+                // Kembalikan filter ke ALL
                 setStatusFilter("ALL")
               }}
               className='border-gray-200 hover:bg-blue-50 hover:text-blue-600'
@@ -438,6 +628,20 @@ export default function ServicePage() {
           </div>
         </div>
 
+        {/* 
+          Conditional Rendering
+
+          Ada 3 kondisi:
+
+          1. fetching = true
+             -> tampilkan loading
+
+          2. fetching selesai tetapi data kosong
+             -> tampilkan "Tidak ada layanan"
+
+          3. Ada data
+             -> tampilkan table
+        */}
         {fetching ? (
           <div className='flex items-center justify-center py-12 text-sm text-gray-500'>
             Memuat data layanan...
@@ -485,9 +689,23 @@ export default function ServicePage() {
             </TableHeader>
 
             <TableBody>
+              {/* 
+                map() digunakan untuk mengubah
+                setiap object service menjadi elemen JSX.
+
+                Misalnya ada 3 service:
+                [service1, service2, service3]
+
+                maka map() menghasilkan:
+                <TableRow />
+                <TableRow />
+                <TableRow />
+              */}
               {filteredServices.map((service) => (
                 <TableRow key={service.id} className='hover:bg-gray-50'>
-                  {/* ID */}
+                  {/* =========================
+                      ID
+                  ========================= */}
 
                   <TableCell>
                     <span className='font-mono text-sm font-medium text-gray-600'>
@@ -495,7 +713,9 @@ export default function ServicePage() {
                     </span>
                   </TableCell>
 
-                  {/* Name */}
+                  {/* =========================
+                      NAME
+                  ========================= */}
 
                   <TableCell>
                     <div className='flex items-center gap-3'>
@@ -509,7 +729,9 @@ export default function ServicePage() {
                     </div>
                   </TableCell>
 
-                  {/* Duration */}
+                  {/* =========================
+                      DURATION
+                  ========================= */}
 
                   <TableCell>
                     <div className='flex items-center gap-2 text-gray-600'>
@@ -519,7 +741,9 @@ export default function ServicePage() {
                     </div>
                   </TableCell>
 
-                  {/* Price */}
+                  {/* =========================
+                      PRICE
+                  ========================= */}
 
                   <TableCell>
                     <div className='flex items-center gap-2'>
@@ -531,7 +755,9 @@ export default function ServicePage() {
                     </div>
                   </TableCell>
 
-                  {/* Status */}
+                  {/* =========================
+                      STATUS
+                  ========================= */}
 
                   <TableCell>
                     <span
@@ -545,11 +771,15 @@ export default function ServicePage() {
                     </span>
                   </TableCell>
 
-                  {/* Actions */}
+                  {/* =========================
+                      ACTIONS
+                  ========================= */}
 
                   <TableCell>
                     <div className='flex justify-end gap-2'>
-                      {/* Edit */}
+                      {/* =========================
+                          EDIT
+                      ========================= */}
 
                       <Button
                         size='sm'
@@ -561,7 +791,9 @@ export default function ServicePage() {
                         Edit
                       </Button>
 
-                      {/* Toggle */}
+                      {/* =========================
+                          TOGGLE ACTIVE
+                      ========================= */}
 
                       <Button
                         size='sm'
@@ -576,7 +808,9 @@ export default function ServicePage() {
                         {service.isActive ? "Deactivate" : "Activate"}
                       </Button>
 
-                      {/* Delete */}
+                      {/* =========================
+                          DELETE
+                      ========================= */}
 
                       <Button
                         size='sm'
@@ -603,8 +837,11 @@ export default function ServicePage() {
       <Dialog
         open={formDialogOpen}
         onOpenChange={(open) => {
+          // Update status dialog
           setFormDialogOpen(open)
 
+          // Kalau dialog ditutup,
+          // bersihkan semua data form.
           if (!open) {
             resetForm()
           }
@@ -623,11 +860,20 @@ export default function ServicePage() {
             </DialogDescription>
           </DialogHeader>
 
+          {/* 
+            Form yang sama digunakan untuk ADD dan EDIT.
+
+            Kalau editingId ada:
+            -> handleEditSave
+
+            Kalau editingId null:
+            -> handleCreateService
+          */}
           <form
             onSubmit={editingId ? handleEditSave : handleCreateService}
             className='space-y-5'
           >
-            {/* Error */}
+            {/* ERROR */}
 
             {error && (
               <div className='rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600'>
@@ -635,15 +881,24 @@ export default function ServicePage() {
               </div>
             )}
 
-            {/* Name */}
+            {/* =========================
+                NAME
+            ========================= */}
 
             <div className='space-y-2'>
               <Label htmlFor='service-name'>Nama Layanan</Label>
 
               <Input
                 id='service-name'
+                // Kalau edit:
+                // gunakan editName
+                //
+                // Kalau tambah:
+                // gunakan name
                 value={editingId ? editName : name}
                 onChange={(e) => {
+                  // Tentukan state mana yang harus diubah
+                  // berdasarkan mode form.
                   if (editingId) {
                     setEditName(e.target.value)
                   } else {
@@ -655,7 +910,9 @@ export default function ServicePage() {
               />
             </div>
 
-            {/* Duration */}
+            {/* =========================
+                DURATION
+            ========================= */}
 
             <div className='space-y-2'>
               <Label htmlFor='service-duration'>Durasi (Menit)</Label>
@@ -677,7 +934,9 @@ export default function ServicePage() {
               />
             </div>
 
-            {/* Price */}
+            {/* =========================
+                PRICE
+            ========================= */}
 
             <div className='space-y-2'>
               <Label htmlFor='service-price'>Harga (Rp)</Label>
@@ -699,9 +958,18 @@ export default function ServicePage() {
               />
             </div>
 
-            {/* Footer */}
+            {/* =========================
+                FOOTER
+            ========================= */}
 
             <DialogFooter>
+              {/* 
+                type="button" penting.
+
+                Kalau tidak diberikan,
+                button di dalam form bisa dianggap
+                sebagai submit button.
+              */}
               <Button
                 type='button'
                 variant='outline'
@@ -716,6 +984,18 @@ export default function ServicePage() {
                 disabled={loading}
                 className='bg-blue-600 hover:bg-blue-700'
               >
+                {/* 
+                  Teks tombol berubah berdasarkan state.
+
+                  loading = true
+                  -> Menyimpan...
+
+                  editingId ada
+                  -> Simpan Perubahan
+
+                  editingId null
+                  -> Tambah Layanan
+                */}
                 {loading
                   ? "Menyimpan..."
                   : editingId
@@ -736,6 +1016,8 @@ export default function ServicePage() {
         onOpenChange={(open) => {
           setDeleteDialogOpen(open)
 
+          // Kalau dialog ditutup,
+          // hapus service yang sebelumnya dipilih.
           if (!open) {
             setServiceToDelete(null)
           }
@@ -747,6 +1029,14 @@ export default function ServicePage() {
 
             <DialogDescription>
               Apakah kamu yakin ingin menghapus layanan{" "}
+              {/* 
+                Optional chaining digunakan karena
+                serviceToDelete bisa bernilai null.
+                
+                Kalau null:
+                serviceToDelete?.name
+                hasilnya undefined dan tidak menyebabkan error.
+              */}
               <span className='font-semibold text-gray-900'>
                 {serviceToDelete?.name}
               </span>
@@ -757,6 +1047,8 @@ export default function ServicePage() {
           </DialogHeader>
 
           <DialogFooter>
+            {/* CANCEL */}
+
             <Button
               type='button'
               variant='outline'
@@ -765,6 +1057,8 @@ export default function ServicePage() {
             >
               Batal
             </Button>
+
+            {/* DELETE */}
 
             <Button
               type='button'
