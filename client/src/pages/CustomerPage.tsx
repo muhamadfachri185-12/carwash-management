@@ -596,7 +596,7 @@ export default function CustomerPage() {
                         Kalau tidak ada → tampilkan "-". */}
                     {customer.address ? (
                       <div className='flex items-start gap-2'>
-                        <MapPin className='mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400' />
+                        <MapPin className='mt-0.5 h-4 w-4 shrink-0 text-gray-400' />
 
                         <span className='line-clamp-2'>{customer.address}</span>
                       </div>
