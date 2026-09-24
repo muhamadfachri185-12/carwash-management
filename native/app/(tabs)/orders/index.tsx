@@ -14,6 +14,7 @@ import { useRouter } from "expo-router"
 import api from "../../../lib/api"
 import { Order } from "../../../types/order"
 import { Ionicons } from "@expo/vector-icons"
+import DateTimePicker from "@react-native-community/datetimepicker"
 
 type StatusFilter = "ALL" | "WAITING" | "IN_PROGRESS" | "COMPLETED"
 
@@ -22,6 +23,13 @@ export default function OrderScreen() {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL")
+
+  const [startDate, setStartDate] = useState<Date | null>(null)
+  const [endDate, setEndDate] = useState<Date | null>(null)
+
+  const [showStartPicker, setShowStartPicker] = useState(false)
+  const [showEndPicker, setShowEndPicker] = useState(false)
+
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -33,7 +41,7 @@ export default function OrderScreen() {
 
   useEffect(() => {
     filterOrders()
-  }, [orders, searchQuery, statusFilter])
+  }, [orders, searchQuery, statusFilter, startDate, endDate])
 
   const fetchOrders = async () => {
     try {
@@ -54,6 +62,28 @@ export default function OrderScreen() {
     // FILTER STATUS
     if (statusFilter !== "ALL") {
       result = result.filter((order) => order.status === statusFilter)
+    }
+
+    // FILTER TANGGAL MULAI
+    if (startDate) {
+      const start = new Date(startDate)
+      start.setHours(0, 0, 0, 0)
+
+      result = result.filter((order) => {
+        const orderDate = new Date(order.createdAt)
+        return orderDate >= start
+      })
+    }
+
+    // FILTER TANGGAL SELESAI
+    if (endDate) {
+      const end = new Date(endDate)
+      end.setHours(23, 59, 59, 999)
+
+      result = result.filter((order) => {
+        const orderDate = new Date(order.createdAt)
+        return orderDate <= end
+      })
     }
 
     // SEARCH
@@ -363,6 +393,46 @@ export default function OrderScreen() {
         ) : null}
       </View>
 
+      {/* DATE FILTER */}
+      <View style={styles.dateFilterRow}>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowStartPicker(true)}
+        >
+          <Ionicons name='calendar-outline' size={18} color='#6b7280' />
+
+          <Text style={styles.dateButtonText}>
+            {startDate
+              ? startDate.toLocaleDateString("id-ID")
+              : "Tanggal mulai"}
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={styles.dateSeparator}>-</Text>
+
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowEndPicker(true)}
+        >
+          <Ionicons name='calendar-outline' size={18} color='#6b7280' />
+
+          <Text style={styles.dateButtonText}>
+            {endDate ? endDate.toLocaleDateString("id-ID") : "Tanggal selesai"}
+          </Text>
+        </TouchableOpacity>
+
+        {(startDate || endDate) && (
+          <TouchableOpacity
+            onPress={() => {
+              setStartDate(null)
+              setEndDate(null)
+            }}
+          >
+            <Ionicons name='close-circle' size={20} color='#ef4444' />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {/* STATUS FILTER */}
       <View style={styles.filterRow}>
         {(["ALL", "WAITING", "IN_PROGRESS", "COMPLETED"] as StatusFilter[]).map(
@@ -396,6 +466,40 @@ export default function OrderScreen() {
       <View style={styles.centered}>
         <ActivityIndicator size='large' color='#2563eb' />
       </View>
+    )
+  }
+
+  {
+    showStartPicker && (
+      <DateTimePicker
+        value={startDate || new Date()}
+        mode='date'
+        display='default'
+        onChange={(event, selectedDate) => {
+          setShowStartPicker(false)
+
+          if (selectedDate) {
+            setStartDate(selectedDate)
+          }
+        }}
+      />
+    )
+  }
+
+  {
+    showEndPicker && (
+      <DateTimePicker
+        value={endDate || new Date()}
+        mode='date'
+        display='default'
+        onChange={(event, selectedDate) => {
+          setShowEndPicker(false)
+
+          if (selectedDate) {
+            setEndDate(selectedDate)
+          }
+        }}
+      />
     )
   }
 
@@ -457,6 +561,36 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 8,
     gap: 12,
+  },
+
+  dateFilterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  dateButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#fff",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+
+  dateButtonText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#374151",
+  },
+
+  dateSeparator: {
+    fontSize: 14,
+    color: "#9ca3af",
   },
 
   searchContainer: {

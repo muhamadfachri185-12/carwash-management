@@ -27,16 +27,27 @@ export default function LoginScreen() {
       Alert.alert("Error", "Email dan password harus diisi")
       return
     }
+
+    if (!email.includes("@")) {
+      Alert.alert("Error", "Format email tidak valid")
+      return
+    }
+
     setLoading(true)
     try {
       await login(email, password)
-      
+      router.replace("/(tabs)/orders")
     } catch (error: any) {
+      const errorMessage =
+        error.response?.status === 401
+          ? "Email atau password salah"
+          : error.response?.data?.message
+            ? error.response.data.message
+            : error.message === "Network Error"
+              ? "Gagal terhubung ke server. Periksa koneksi internet."
+              : "Terjadi kesalahan. Silakan coba lagi."
 
-      Alert.alert(
-        "Login Gagal",
-        error.response?.data?.message || error.message || "Login gagal",
-      )
+      Alert.alert("Login Gagal", errorMessage)
     } finally {
       setLoading(false)
     }

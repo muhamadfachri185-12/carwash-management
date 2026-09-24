@@ -8,8 +8,9 @@ import {
   ScrollView,
   FlatList,
   TouchableOpacity,
+  TextInput,
 } from "react-native"
-import { useRouter } from "expo-router"
+import { useRouter, useLocalSearchParams } from "expo-router"
 import api from "../../../lib/api"
 import { Customer, Vehicle, Service } from "../../../types/order"
 import { Ionicons } from "@expo/vector-icons"
@@ -21,6 +22,9 @@ interface SelectedService {
 
 export default function CreateOrderScreen() {
   const router = useRouter()
+  const { id } = useLocalSearchParams()
+
+  const isEdit = !!id
 
   const [customers, setCustomers] = useState<Customer[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -41,6 +45,18 @@ export default function CreateOrderScreen() {
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
   const [showVehicleDropdown, setShowVehicleDropdown] = useState(false)
 
+  const [showNewCustomerForm, setShowNewCustomerForm] = useState(false)
+  const [showNewVehicleForm, setShowNewVehicleForm] = useState(false)
+  const [newCustomerName, setNewCustomerName] = useState("")
+  const [newCustomerPhone, setNewCustomerPhone] = useState("")
+  const [newCustomerAddress, setNewCustomerAddress] = useState("")
+  const [newVehiclePlate, setNewVehiclePlate] = useState("")
+  const [newVehicleBrand, setNewVehicleBrand] = useState("")
+  const [newVehicleModel, setNewVehicleModel] = useState("")
+
+  const [savingCustomer, setSavingCustomer] = useState(false)
+  const [savingVehicle, setSavingVehicle] = useState(false)
+
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
@@ -48,6 +64,12 @@ export default function CreateOrderScreen() {
   useEffect(() => {
     fetchData()
   }, [])
+
+  useEffect(() => {
+    if (id) {
+      fetchOrderForEdit()
+    }
+  }, [id])
 
   const fetchData = async () => {
     try {
@@ -63,9 +85,57 @@ export default function CreateOrderScreen() {
       setServices(
         servRes.data.services.filter((service: Service) => service.isActive),
       )
+
+      // Kalau mode edit, ambil data order
+      if (id) {
+        const orderRes = await api.get(`/orders/${id}`)
+        const order = orderRes.data.data
+
+        setSelectedCustomerId(order.customerId)
+        setSelectedVehicleId(order.vehicleId)
+
+        setSelectedServices(
+          order.orderItems.map((item: any) => ({
+            serviceId: item.serviceId,
+            quantity: item.quantity,
+          })),
+        )
+      }
     } catch (error) {
       console.error("Error fetching data:", error)
       Alert.alert("Error", "Gagal memuat data")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchOrderForEdit = async () => {
+    try {
+      setLoading(true)
+
+      const response = await api.get(`/orders/${id}`)
+      const order = response.data.data
+
+      // Customer
+      setSelectedCustomerId(order.customerId)
+
+      // Vehicle
+      setSelectedVehicleId(order.vehicleId)
+
+      // Service yang sudah dipilih
+      setSelectedServices(
+        order.orderItems.map((item: any) => ({
+          serviceId: item.serviceId,
+          quantity: item.quantity,
+        })),
+      )
+    } catch (error: any) {
+      console.error("Error fetching order:", error.response?.data)
+
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Gagal memuat order",
+      )
     } finally {
       setLoading(false)
     }
@@ -76,6 +146,110 @@ export default function CreateOrderScreen() {
     (vehicle) => vehicle.customerId === selectedCustomerId,
   )
 
+  const handleCreateCustomer = async () => {
+    if (!newCustomerName.trim()) {
+      setError("Nama customer harus diisi")
+      return
+    }
+
+    if (!newCustomerPhone.trim()) {
+      setError("Nomor telepon harus diisi")
+      return
+    }
+
+    setSavingCustomer(true)
+    setError("")
+
+    try {
+      const response = await api.post("/customers", {
+        name: newCustomerName.trim(),
+        phone: newCustomerPhone.trim(),
+        address: newCustomerAddress.trim(),
+      })
+
+      const newCustomer = response.data.customer
+
+      // Tambahkan customer baru ke list
+      setCustomers((prev) => [...prev, newCustomer])
+
+      // Langsung pilih customer baru
+      setSelectedCustomerId(newCustomer.id)
+
+      // Reset form
+      setNewCustomerName("")
+      setNewCustomerPhone("")
+      setNewCustomerAddress("")
+
+      setShowNewCustomerForm(false)
+      setShowCustomerDropdown(false)
+
+      Alert.alert("Sukses", "Customer berhasil ditambahkan")
+    } catch (error: any) {
+      console.error("Create customer error:", error)
+
+      setError(error.response?.data?.message || "Gagal menambahkan customer")
+    } finally {
+      setSavingCustomer(false)
+    }
+  }
+
+  const handleCreateVehicle = async () => {
+    if (!selectedCustomerId) {
+      setError("Pilih customer terlebih dahulu")
+      return
+    }
+
+    if (!newVehiclePlate.trim()) {
+      setError("Plat nomor harus diisi")
+      return
+    }
+
+    if (!newVehicleBrand.trim()) {
+      setError("Merek kendaraan harus diisi")
+      return
+    }
+
+    if (!newVehicleModel.trim()) {
+      setError("Model kendaraan harus diisi")
+      return
+    }
+
+    setSavingVehicle(true)
+    setError("")
+
+    try {
+      const response = await api.post("/vehicles", {
+        customerId: selectedCustomerId,
+        plateNumber: newVehiclePlate.trim().toUpperCase(),
+        brand: newVehicleBrand.trim(),
+        model: newVehicleModel.trim(),
+      })
+
+      const newVehicle = response.data.vehicle
+
+      // Tambahkan kendaraan baru ke list
+      setVehicles((prev) => [...prev, newVehicle])
+
+      // Langsung pilih kendaraan baru
+      setSelectedVehicleId(newVehicle.id)
+
+      // Reset form
+      setNewVehiclePlate("")
+      setNewVehicleBrand("")
+      setNewVehicleModel("")
+
+      setShowNewVehicleForm(false)
+      setShowVehicleDropdown(false)
+
+      Alert.alert("Sukses", "Kendaraan berhasil ditambahkan")
+    } catch (error: any) {
+      console.error("Create vehicle error:", error)
+
+      setError(error.response?.data?.message || "Gagal menambahkan kendaraan")
+    } finally {
+      setSavingVehicle(false)
+    }
+  }
   const handleCustomerSelect = (customerId: number) => {
     setSelectedCustomerId(customerId)
 
@@ -164,22 +338,35 @@ export default function CreateOrderScreen() {
     setError("")
 
     try {
-      await api.post("/orders", {
+      const orderData = {
         customerId: selectedCustomerId,
         vehicleId: selectedVehicleId,
         items: selectedServices,
-      })
+      }
 
-      Alert.alert("Sukses", "Order berhasil dibuat", [
-        {
-          text: "OK",
-          onPress: () => router.back(),
-        },
-      ])
+      if (isEdit) {
+        await api.patch(`/orders/${id}`, orderData)
+
+        Alert.alert("Sukses", "Order berhasil diperbarui", [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ])
+      } else {
+        await api.post("/orders", orderData)
+
+        Alert.alert("Sukses", "Order berhasil dibuat", [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ])
+      }
     } catch (error: any) {
-      console.error("Error creating order:", error)
+      console.error("Error saving order:", error.response?.data)
 
-      setError(error.response?.data?.message || "Gagal membuat order")
+      setError(error.response?.data?.message || "Gagal menyimpan order")
     } finally {
       setSaving(false)
     }
@@ -211,7 +398,9 @@ export default function CreateOrderScreen() {
           <Ionicons name='arrow-back' size={24} color='#374151' />
         </TouchableOpacity>
 
-        <Text style={styles.title}>Buat Order Baru</Text>
+        <Text style={styles.title}>
+          {isEdit ? "Edit Order" : "Buat Order Baru"}
+        </Text>
 
         <View style={{ width: 24 }} />
       </View>
@@ -230,7 +419,10 @@ export default function CreateOrderScreen() {
 
           <TouchableOpacity
             style={styles.dropdownButton}
-            onPress={() => setShowCustomerDropdown(!showCustomerDropdown)}
+            onPress={() => {
+              setShowCustomerDropdown(!showCustomerDropdown)
+              setShowNewCustomerForm(false)
+            }}
           >
             <Text
               style={[
@@ -250,21 +442,93 @@ export default function CreateOrderScreen() {
 
           {showCustomerDropdown && (
             <View style={styles.dropdownList}>
-              <FlatList
-                data={customers}
-                renderItem={({ item }) => (
+              <ScrollView
+                nestedScrollEnabled
+                showsVerticalScrollIndicator
+                keyboardShouldPersistTaps='handled'
+              >
+                {customers.map((item) => (
                   <TouchableOpacity
+                    key={item.id}
                     style={styles.dropdownItem}
-                    onPress={() => handleCustomerSelect(item.id)}
+                    onPress={() => {
+                      setSelectedCustomerId(item.id)
+                      setShowCustomerDropdown(false)
+                    }}
                   >
                     <Text style={styles.dropdownItemText}>{item.name}</Text>
 
-                    <Text style={styles.dropdownItemSubtext}>{item.phone}</Text>
+                    <Text style={styles.dropdownPhone}>{item.phone}</Text>
                   </TouchableOpacity>
-                )}
-                keyExtractor={(item) => item.id.toString()}
-                scrollEnabled={false}
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* TAMBAH CUSTOMER */}
+          {!showNewCustomerForm && (
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => {
+                setShowNewCustomerForm(true)
+                setShowCustomerDropdown(false)
+                setError("")
+              }}
+            >
+              <Ionicons name='add-circle-outline' size={18} color='#2563eb' />
+
+              <Text style={styles.addButtonText}>Tambah Customer Baru</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* FORM CUSTOMER BARU */}
+          {showNewCustomerForm && (
+            <View style={styles.newForm}>
+              <View style={styles.newFormHeader}>
+                <View style={styles.newFormTitleRow}>
+                  <Ionicons name='person-outline' size={18} color='#2563eb' />
+
+                  <Text style={styles.newFormTitle}>Customer Baru</Text>
+                </View>
+
+                <TouchableOpacity onPress={() => setShowNewCustomerForm(false)}>
+                  <Text style={styles.cancelText}>Batal</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TextInput
+                style={styles.input}
+                placeholder='Nama customer'
+                value={newCustomerName}
+                onChangeText={setNewCustomerName}
               />
+
+              <TextInput
+                style={styles.input}
+                placeholder='No. Telepon'
+                value={newCustomerPhone}
+                onChangeText={setNewCustomerPhone}
+                keyboardType='phone-pad'
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder='Alamat (opsional)'
+                value={newCustomerAddress}
+                onChangeText={setNewCustomerAddress}
+              />
+
+              <TouchableOpacity
+                style={styles.saveNewButton}
+                onPress={handleCreateCustomer}
+                disabled={savingCustomer}
+              >
+                {savingCustomer ? (
+                  <ActivityIndicator color='#fff' />
+                ) : (
+                  <Text style={styles.saveNewButtonText}>Simpan Customer</Text>
+                )}
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -281,6 +545,7 @@ export default function CreateOrderScreen() {
             onPress={() => {
               if (selectedCustomerId) {
                 setShowVehicleDropdown(!showVehicleDropdown)
+                setShowNewVehicleForm(false)
               }
             }}
             disabled={!selectedCustomerId}
@@ -305,6 +570,7 @@ export default function CreateOrderScreen() {
             />
           </TouchableOpacity>
 
+          {/* LIST KENDARAAN */}
           {showVehicleDropdown && (
             <View style={styles.dropdownList}>
               {filteredVehicles.length === 0 ? (
@@ -334,6 +600,73 @@ export default function CreateOrderScreen() {
                   scrollEnabled={false}
                 />
               )}
+            </View>
+          )}
+
+          {/* TAMBAH KENDARAAN */}
+          {selectedCustomerId && !showNewVehicleForm && (
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => {
+                setShowNewVehicleForm(true)
+                setShowVehicleDropdown(false)
+                setError("")
+              }}
+            >
+              <Ionicons name='add-circle-outline' size={18} color='#2563eb' />
+
+              <Text style={styles.addButtonText}>Tambah Kendaraan Baru</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* FORM KENDARAAN BARU */}
+          {showNewVehicleForm && (
+            <View style={styles.newForm}>
+              <View style={styles.newFormHeader}>
+                <View style={styles.newFormTitleRow}>
+                  <Ionicons name='car-outline' size={18} color='#2563eb' />
+
+                  <Text style={styles.newFormTitle}>Kendaraan Baru</Text>
+                </View>
+
+                <TouchableOpacity onPress={() => setShowNewVehicleForm(false)}>
+                  <Text style={styles.cancelText}>Batal</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TextInput
+                style={styles.input}
+                placeholder='Plat Nomor'
+                value={newVehiclePlate}
+                onChangeText={setNewVehiclePlate}
+                autoCapitalize='characters'
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder='Merek'
+                value={newVehicleBrand}
+                onChangeText={setNewVehicleBrand}
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder='Model'
+                value={newVehicleModel}
+                onChangeText={setNewVehicleModel}
+              />
+
+              <TouchableOpacity
+                style={styles.saveNewButton}
+                onPress={handleCreateVehicle}
+                disabled={savingVehicle}
+              >
+                {savingVehicle ? (
+                  <ActivityIndicator color='#fff' />
+                ) : (
+                  <Text style={styles.saveNewButtonText}>Simpan Kendaraan</Text>
+                )}
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -417,7 +750,9 @@ export default function CreateOrderScreen() {
           {saving ? (
             <ActivityIndicator color='#fff' />
           ) : (
-            <Text style={styles.submitButtonText}>Buat Order</Text>
+            <Text style={styles.submitButtonText}>
+              {isEdit ? "Simpan Perubahan" : "Buat Order"}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -481,6 +816,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
 
+  dropdownList: {
+    height: 200,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    marginTop: 4,
+    backgroundColor: "#fff",
+    overflow: "hidden",
+  },
+  dropdownPhone: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginTop: 2,
+  },
+
   dropdownDisabled: {
     backgroundColor: "#f3f4f6",
     opacity: 0.6,
@@ -494,15 +844,6 @@ const styles = StyleSheet.create({
 
   placeholderText: {
     color: "#9ca3af",
-  },
-
-  dropdownList: {
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    marginTop: 8,
-    backgroundColor: "#fff",
-    maxHeight: 200,
   },
 
   dropdownItem: {
@@ -531,6 +872,79 @@ const styles = StyleSheet.create({
   emptyDropdownText: {
     fontSize: 13,
     color: "#9ca3af",
+  },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10,
+    paddingVertical: 8,
+  },
+
+  addButtonText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#2563eb",
+  },
+
+  newForm: {
+    marginTop: 10,
+    padding: 12,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+  },
+
+  newFormHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  newFormTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+
+  newFormTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111827",
+  },
+
+  cancelText: {
+    fontSize: 13,
+    color: "#6b7280",
+  },
+
+  input: {
+    height: 44,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+    marginBottom: 8,
+    fontSize: 14,
+    color: "#111827",
+  },
+
+  saveNewButton: {
+    height: 44,
+    backgroundColor: "#2563eb",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 4,
+  },
+
+  saveNewButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 
   serviceCard: {

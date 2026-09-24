@@ -34,12 +34,7 @@ function RootContent() {
     )
   }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name='(auth)' />
-      <Stack.Screen name='(tabs)' />
-    </Stack>
-  )
+  return <Stack screenOptions={{ headerShown: false }} />
 }
 
 export default function RootLayout() {

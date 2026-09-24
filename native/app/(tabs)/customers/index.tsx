@@ -14,12 +14,14 @@ import { useRouter } from "expo-router"
 import api from "../../../lib/api"
 import { Customer } from "../../../types/order"
 import { Ionicons } from "@expo/vector-icons"
+import ErrorAlert from "../../../components/ErrorAlert"
 
 export default function CustomerScreen() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [errorAlert, setErrorAlert] = useState("")
 
   const router = useRouter()
 
@@ -67,14 +69,15 @@ export default function CustomerScreen() {
         style: "destructive",
         onPress: async () => {
           try {
+            setLoading(true)
             await api.delete(`/customers/${customer.id}`)
-
             fetchCustomers()
           } catch (error: any) {
-            Alert.alert(
-              "Error",
+            setErrorAlert(
               error.response?.data?.message || "Gagal menghapus customer",
             )
+          } finally {
+            setLoading(false)
           }
         },
       },
@@ -138,6 +141,9 @@ export default function CustomerScreen() {
 
   return (
     <View style={styles.container}>
+      {errorAlert && (
+        <ErrorAlert message={errorAlert} onDismiss={() => setErrorAlert("")} />
+      )}
       {/* SEARCH */}
       <View style={styles.searchContainer}>
         <Ionicons name='search' size={20} color='#9ca3af' />

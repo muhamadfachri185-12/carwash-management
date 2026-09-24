@@ -37,7 +37,10 @@ export default function CustomerFormScreen() {
   const fetchCustomer = async (customerId: number) => {
     try {
       setLoading(true)
+
       const response = await api.get(`/customers/${customerId}`)
+
+      console.log("RESPONSE:", response.data)
       const customer = response.data.customer
       setName(customer.name)
       setPhone(customer.phone)
@@ -45,7 +48,9 @@ export default function CustomerFormScreen() {
     } catch (error: any) {
       Alert.alert(
         "Error",
-        error.response?.data?.message || "Gagal memuat customer",
+        error.response?.data?.message ||
+          JSON.stringify(error.response?.data) ||
+          "Gagal memuat customer",
       )
     } finally {
       setLoading(false)
@@ -84,7 +89,7 @@ export default function CustomerFormScreen() {
         await api.post("/customers", customerData)
         Alert.alert("Sukses", "Customer berhasil ditambahkan")
       } else {
-        await api.post(`/customers/${id}`, customerData)
+        await api.patch(`/customers/${id}`, customerData)
         Alert.alert("Sukses", "Customer berhasil diperbarui")
       }
       router.back()

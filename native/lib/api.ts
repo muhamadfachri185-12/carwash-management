@@ -2,7 +2,7 @@ import axios from "axios"
 import { storage } from "./storage"
 
 // Membuat koneksi ke API backend
-const API_URL = "http://192.168.18.65:3000/api"
+const API_URL = "http://10.25.68.225:3000/api"
 
 // Membuat Axios dengan konfigurasi dasar
 const api = axios.create({
