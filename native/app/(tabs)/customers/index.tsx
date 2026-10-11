@@ -4,7 +4,6 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   RefreshControl,
   Alert,
@@ -87,44 +86,46 @@ export default function CustomerScreen() {
   const renderCustomerCard = ({ item }: { item: Customer }) => {
     return (
       <TouchableOpacity
-        style={styles.card}
+        className='p-4 mb-3 bg-white rounded-xl'
         onPress={() => router.push(`/(tabs)/customers/${item.id}`)}
       >
         {/* BAGIAN ATAS CARD */}
-        <View style={styles.cardHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
+        <View className='flex-row items-center gap-3'>
+          <View className='w-11 h-11 rounded-full bg-blue-600 items-center justify-center'>
+            <Text className='text-lg font-semibold text-white'>
               {item.name.charAt(0).toUpperCase()}
             </Text>
           </View>
 
-          <View style={styles.cardInfo}>
-            <Text style={styles.customerName}>{item.name}</Text>
+          <View className='flex-1'>
+            <Text className='text-base font-semibold text-gray-900'>
+              {item.name}
+            </Text>
 
-            <Text style={styles.customerPhone}>{item.phone}</Text>
+            <Text className='mt-0.5 text-sm text-gray-500'>{item.phone}</Text>
           </View>
 
           <Ionicons name='chevron-forward' size={20} color='#9ca3af' />
         </View>
 
         {/* BAGIAN BAWAH CARD */}
-        <View style={styles.cardFooter}>
+        <View className='flex-row justify-end gap-4 mt-3 pt-3 border-t border-gray-200'>
           <TouchableOpacity
-            style={styles.editButton}
+            className='flex-row items-center gap-1'
             onPress={() => router.push(`/(tabs)/customers/${item.id}`)}
           >
             <Ionicons name='create-outline' size={16} color='#2563eb' />
 
-            <Text style={styles.editButtonText}>Edit</Text>
+            <Text className='text-sm text-blue-600'>Edit</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.deleteButton}
+            className='flex-row items-center gap-1'
             onPress={() => handleDelete(item)}
           >
             <Ionicons name='trash-outline' size={16} color='#ef4444' />
 
-            <Text style={styles.deleteButtonText}>Hapus</Text>
+            <Text className='text-sm text-red-500'>Hapus</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -133,23 +134,24 @@ export default function CustomerScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View className='flex-1 items-center justify-center'>
         <ActivityIndicator size='large' color='#2563eb' />
       </View>
     )
   }
 
   return (
-    <View style={styles.container}>
+    <View className='flex-1 bg-gray-50'>
       {errorAlert && (
         <ErrorAlert message={errorAlert} onDismiss={() => setErrorAlert("")} />
       )}
+
       {/* SEARCH */}
-      <View style={styles.searchContainer}>
+      <View className='flex-row items-center gap-2 mx-4 mt-2 px-4 py-3 bg-white rounded-xl border border-gray-200'>
         <Ionicons name='search' size={20} color='#9ca3af' />
 
         <TextInput
-          style={styles.searchInput}
+          className='flex-1 text-sm text-gray-900'
           placeholder='Cari nama atau telepon...'
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -161,15 +163,18 @@ export default function CustomerScreen() {
         data={filteredCustomers}
         renderItem={renderCustomerCard}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 100,
+        }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <View style={styles.empty}>
+          <View className='items-center p-10'>
             <Ionicons name='people-outline' size={48} color='#d1d5db' />
 
-            <Text style={styles.emptyText}>
+            <Text className='mt-3 text-sm text-gray-500'>
               {searchQuery ? "Tidak ada hasil pencarian" : "Belum ada customer"}
             </Text>
           </View>
@@ -178,7 +183,7 @@ export default function CustomerScreen() {
 
       {/* BUTTON TAMBAH */}
       <TouchableOpacity
-        style={styles.fab}
+        className='absolute bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 items-center justify-center'
         onPress={() => router.push("/(tabs)/customers/new")}
       >
         <Ionicons name='add' size={24} color='#fff' />
@@ -186,77 +191,3 @@ export default function CustomerScreen() {
     </View>
   )
 }
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    margin: 16,
-    marginTop: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    gap: 8,
-  },
-  searchInput: { flex: 1, fontSize: 14, color: "#111827" },
-  list: { padding: 16, paddingBottom: 100 },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  cardHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#2563eb",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: { color: "#fff", fontSize: 18, fontWeight: "600" },
-  cardInfo: { flex: 1 },
-  customerName: { fontSize: 16, fontWeight: "600", color: "#111827" },
-  customerPhone: { fontSize: 14, color: "#6b7280", marginTop: 2 },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 16,
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
-  },
-  editButton: { flexDirection: "row", alignItems: "center", gap: 4 },
-  editButtonText: { color: "#2563eb", fontSize: 14 },
-  deleteButton: { flexDirection: "row", alignItems: "center", gap: 4 },
-  deleteButtonText: { color: "#ef4444", fontSize: 14 },
-  empty: { padding: 40, alignItems: "center" },
-  emptyText: { fontSize: 14, color: "#6b7280", marginTop: 12 },
-  fab: {
-    position: "absolute",
-    right: 24,
-    bottom: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#2563eb",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 8,
-  },
-})

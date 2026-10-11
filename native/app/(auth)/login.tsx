@@ -4,21 +4,21 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from "react-native"
-
 import { useRouter } from "expo-router"
 import { useAuth } from "../../context/AuthContext"
 import { StatusBar } from "expo-status-bar"
+import { Ionicons } from "@expo/vector-icons"
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const { login } = useAuth()
 
@@ -54,22 +54,24 @@ export default function LoginScreen() {
   }
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      className='flex-1 bg-gray-50'
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <StatusBar style='dark' />
 
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>WashFlow Staff</Text>
-          <Text style={styles.subtitle}>Login ke akun Anda</Text>
+      <View className='flex-1 justify-center px-6'>
+        <View className='items-center mb-10'>
+          <Text className='text-[32px] font-bold text-gray-900 mb-2'>
+            WashFlow Staff
+          </Text>
+          <Text className='text-base text-gray-500'>Login ke akun Anda</Text>
         </View>
 
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
+        <View className='gap-5'>
+          <View className='gap-2'>
+            <Text className='text-sm font-medium text-gray-700'>Email</Text>
             <TextInput
-              style={styles.input}
+              className='h-12 px-4 text-base bg-white border border-gray-300 rounded-lg'
               placeholder='staff@carwash.com'
               value={email}
               onChangeText={setEmail}
@@ -79,27 +81,41 @@ export default function LoginScreen() {
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder='Masukkan password'
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!loading}
-            />
+          <View className='gap-2'>
+            <Text className='text-sm font-medium text-gray-700'>Password</Text>
+            <View className='relative'>
+              <TextInput
+                className='h-12 px-4 pr-14 text-base bg-white border border-gray-300 rounded-lg'
+                placeholder='Masukkan password'
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                editable={!loading}
+              />
+
+              <TouchableOpacity
+                className='absolute right-0 top-0 h-12 w-12 items-center justify-center'
+                onPress={() => setShowPassword(!showPassword)}
+                disabled={loading}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={22}
+                  color='#6b7280'
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            className={`h-12 mt-3 rounded-lg items-center justify-center ${loading ? "bg-blue-400" : "bg-blue-600"}`}
             onPress={handleLogin}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color='#fff' />
             ) : (
-              <Text style={styles.buttonText}>Login</Text>
+              <Text className='text-base font-semibold text-white'>Login</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -107,65 +123,3 @@ export default function LoginScreen() {
     </KeyboardAvoidingView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f9fafb",
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 24,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#111827",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#6b7280",
-  },
-  form: {
-    gap: 20,
-  },
-  inputGroup: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#374151",
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    backgroundColor: "#fff",
-  },
-  button: {
-    height: 48,
-    backgroundColor: "#2563eb",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 12,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-})

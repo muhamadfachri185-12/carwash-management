@@ -30,7 +30,9 @@ import { AuthRequest } from "./auth.middleware"
 //
 // maka:
 // allowedRoles = ["ADMIN", "STAFF"]
-export const authorizeRoles = (...allowedRoles: ("ADMIN" | "STAFF")[]) => {
+export const authorizeRoles = (
+  ...allowedRoles: ("ADMIN" | "STAFF" | "CUSTOMER")[]
+) => {
   // Function ini mengembalikan middleware Express.
   //
   // Jadi authorizeRoles() bukan middleware langsung,

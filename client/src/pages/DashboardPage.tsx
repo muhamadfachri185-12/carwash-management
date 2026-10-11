@@ -1,6 +1,7 @@
 // useState  = untuk menyimpan state/data yang bisa berubah
 // useEffect = untuk menjalankan side effect, misalnya mengambil data dari API
 import { useState, useEffect } from "react"
+import socket from "../lib/socket"
 
 // Axios instance untuk komunikasi dengan backend API.
 import axios from "../lib/axios"
@@ -117,7 +118,7 @@ export default function DashboardPage() {
 
   // Function async digunakan karena kita akan
   // melakukan request HTTP ke backend.
-  const fetchDasboard = async () => {
+  const fetchDashboard = async () => {
     try {
       // GET /dashboard
       //
@@ -183,7 +184,42 @@ export default function DashboardPage() {
   //
   // Cocok digunakan untuk initial data fetching.
   useEffect(() => {
-    fetchDasboard()
+    fetchDashboard()
+  }, [])
+
+  useEffect(() => {
+    const handleOrderCreated = () => {
+      console.log("Dashboard: order baru dibuat")
+
+      fetchDashboard()
+    }
+
+    const handleOrderStatusUpdated = (data: {
+      orderId: number
+      status: string
+      completedAt: string | null
+    }) => {
+      console.log("Dashboard: status order berubah:", data)
+
+      fetchDashboard()
+    }
+
+    const handlePaymentStatusUpdated = (data: {
+      orderId: number
+      paymentStatus: string
+    }) => {
+      console.log("Payment status berubah:", data)
+      fetchDashboard()
+    }
+
+    socket.on("order:created", handleOrderCreated)
+    socket.on("order:status-updated", handleOrderStatusUpdated)
+    socket.on("payment:updated", handlePaymentStatusUpdated)
+    return () => {
+      socket.off("order:created", handleOrderCreated)
+      socket.off("order:status-updated", handleOrderStatusUpdated)
+      socket.off("payment:updated", handlePaymentStatusUpdated)
+    }
   }, [])
 
   // =====================================================
@@ -384,7 +420,7 @@ export default function DashboardPage() {
             className='mt-3'
             // User bisa mencoba request API lagi
             // dengan memanggil fetchDasboard().
-            onClick={() => fetchDasboard()}
+            onClick={() => fetchDashboard()}
           >
             Coba Lagi
           </Button>

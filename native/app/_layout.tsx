@@ -1,3 +1,4 @@
+import "../global.css"
 import { useEffect } from "react"
 import { Stack, useRouter } from "expo-router"
 import { ActivityIndicator, View } from "react-native"

@@ -4,7 +4,6 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   RefreshControl,
 } from "react-native"
@@ -15,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons"
 import { TextInput } from "react-native"
 import DateTimePicker from "@react-native-community/datetimepicker"
 
-export default function HistyoryScreen() {
+export default function HistoryScreen() {
   const [completedOrders, setCompletedOrders] = useState<Order[]>([])
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -28,6 +27,7 @@ export default function HistyoryScreen() {
 
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+
   const router = useRouter()
 
   useEffect(() => {
@@ -41,10 +41,13 @@ export default function HistyoryScreen() {
   const fetchCompleteOrders = async () => {
     try {
       setLoading(true)
+
       const response = await api.get("/orders")
+
       const completed = response.data.data.filter(
         (order: Order) => order.status === "COMPLETED",
       )
+
       setCompletedOrders(completed)
     } catch (error: any) {
       console.error("Error fetching completed orders:", error)
@@ -60,6 +63,7 @@ export default function HistyoryScreen() {
     // Filter by search
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
+
       result = result.filter(
         (order) =>
           order.customer?.name?.toLowerCase().includes(query) ||
@@ -72,6 +76,7 @@ export default function HistyoryScreen() {
     if (startDate) {
       result = result.filter((order) => {
         const orderDate = new Date(order.completedAt || order.createdAt)
+
         return orderDate >= startDate
       })
     }
@@ -100,81 +105,110 @@ export default function HistyoryScreen() {
   const getPaymentBadge = (paymentStatus: string) => {
     switch (paymentStatus) {
       case "PAID":
-        return { bg: "#d1fae5", text: "#065f46" }
+        return {
+          bg: "#d1fae5",
+          text: "#065f46",
+        }
+
       case "UNPAID":
-        return { bg: "#fee2e2", text: "#991b1b" }
+        return {
+          bg: "#fee2e2",
+          text: "#991b1b",
+        }
+
       default:
-        return { bg: "#e5e7eb", text: "#374151" }
+        return {
+          bg: "#e5e7eb",
+          text: "#374151",
+        }
     }
   }
 
   const renderOrderCard = ({ item }: { item: Order }) => {
     const paymentBadge = getPaymentBadge(item.paymentStatus)
+
     const completedDate = item.completedAt
       ? new Date(item.completedAt).toLocaleDateString("id-ID")
       : new Date(item.createdAt).toLocaleDateString("id-ID")
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        className='p-4 mb-3 bg-white rounded-xl border-l-4 border-l-emerald-500'
         onPress={() => router.push(`/(tabs)/orders/${item.id}`)}
       >
-        <View style={styles.cardHeader}>
-          <View style={styles.orderCodeContainer}>
-            <Text style={styles.orderCode}>{item.orderCode}</Text>
-            <Text style={styles.completedDate}>{completedDate}</Text>
+        {/* BAGIAN ATAS CARD */}
+        <View className='flex-row justify-between items-start mb-3'>
+          <View className='gap-1'>
+            <Text className='text-base font-bold text-gray-900'>
+              {item.orderCode}
+            </Text>
+
+            <Text className='text-xs text-gray-400'>{completedDate}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: "#a7f3d0" }]}>
-            <Text style={[styles.statusText, { color: "#065f46" }]}>
+
+          <View className='px-2.5 py-1 rounded-xl bg-emerald-200'>
+            <Text className='text-[11px] font-semibold text-emerald-800'>
               COMPLETED
             </Text>
           </View>
         </View>
 
-        <View style={styles.cardContent}>
-          <View style={styles.row}>
+        {/* DETAIL ORDER */}
+        <View className='gap-2 mb-3'>
+          <View className='flex-row items-center gap-2'>
             <Ionicons name='person-outline' size={16} color='#6b7280' />
-            <Text style={styles.cardText} numberOfLines={1}>
+
+            <Text className='flex-1 text-sm text-gray-700' numberOfLines={1}>
               {item.customer?.name || "-"}
             </Text>
           </View>
 
-          <View style={styles.row}>
+          <View className='flex-row items-center gap-2'>
             <Ionicons name='car-outline' size={16} color='#6b7280' />
-            <Text style={styles.cardText}>
+
+            <Text className='text-sm text-gray-700'>
               {item.vehicle?.plateNumber || "-"}
             </Text>
           </View>
 
-          <View style={styles.row}>
+          <View className='flex-row items-center gap-2'>
             <Ionicons name='list-outline' size={16} color='#6b7280' />
-            <Text style={styles.cardText}>
+
+            <Text className='text-sm text-gray-700'>
               {item.orderItems.length} service
               {item.orderItems.length > 1 ? "s" : ""}
             </Text>
           </View>
         </View>
 
-        <View style={styles.cardFooter}>
-          <Text style={styles.totalPrice}>
+        {/* TOTAL + PAYMENT */}
+        <View className='flex-row justify-between items-center pt-3 mb-3 border-t border-gray-200'>
+          <Text className='text-lg font-bold text-gray-900'>
             Rp {item.total.toLocaleString("id-ID")}
           </Text>
+
           <View
-            style={[styles.paymentBadge, { backgroundColor: paymentBadge.bg }]}
+            className='px-2 py-1 rounded-lg'
+            style={{ backgroundColor: paymentBadge.bg }}
           >
-            <Text style={[styles.paymentText, { color: paymentBadge.text }]}>
+            <Text
+              className='text-xs font-semibold'
+              style={{ color: paymentBadge.text }}
+            >
               {item.paymentStatus}
             </Text>
           </View>
         </View>
 
-        <View style={styles.cardActions}>
+        {/* ACTION */}
+        <View className='flex-row justify-end pt-2 border-t border-gray-100'>
           <TouchableOpacity
-            style={styles.viewButton}
+            className='flex-row items-center gap-1 px-3 py-1.5'
             onPress={() => router.push(`/(tabs)/orders/${item.id}`)}
           >
             <Ionicons name='eye-outline' size={16} color='#2563eb' />
-            <Text style={styles.viewButtonText}>Lihat Detail</Text>
+
+            <Text className='text-xs text-blue-600'>Lihat Detail</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -192,16 +226,19 @@ export default function HistyoryScreen() {
   }
 
   const renderFilterBar = () => (
-    <View style={styles.filterBar}>
-      <View style={styles.searchContainer}>
+    <View className='p-4 pt-2 gap-3'>
+      {/* SEARCH */}
+      <View className='flex-row items-center gap-2 px-4 py-3 bg-white rounded-xl border border-gray-200'>
         <Ionicons name='search' size={18} color='#9ca3af' />
+
         <TextInput
-          style={styles.searchInput}
+          className='flex-1 text-sm text-gray-900'
           placeholder='Cari customer, plat, atau kode...'
+          placeholderTextColor='#9ca3af'
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholderTextColor='#9ca3af'
         />
+
         {searchQuery ? (
           <TouchableOpacity onPress={() => setSearchQuery("")}>
             <Ionicons name='close-circle' size={18} color='#9ca3af' />
@@ -210,20 +247,21 @@ export default function HistyoryScreen() {
       </View>
 
       {/* FILTER TANGGAL */}
-      <View style={styles.dateFilterRow}>
+      <View className='flex-row gap-3'>
         {/* DARI TANGGAL */}
-        <View style={styles.dateFilterItem}>
-          <Text style={styles.dateLabel}>Dari Tanggal</Text>
+        <View className='flex-1'>
+          <Text className='mb-1.5 text-xs font-medium text-gray-700'>
+            Dari Tanggal
+          </Text>
 
           <TouchableOpacity
-            style={styles.dateButton}
+            className='h-11 flex-row items-center justify-between px-3 bg-white rounded-lg border border-gray-200'
             onPress={() => setShowStartPicker(true)}
           >
             <Text
-              style={[
-                styles.dateButtonText,
-                !startDate && styles.datePlaceholder,
-              ]}
+              className={`text-[13px] ${
+                startDate ? "text-gray-900" : "text-gray-400"
+              }`}
             >
               {formatDate(startDate)}
             </Text>
@@ -233,18 +271,19 @@ export default function HistyoryScreen() {
         </View>
 
         {/* SAMPAI TANGGAL */}
-        <View style={styles.dateFilterItem}>
-          <Text style={styles.dateLabel}>Sampai Tanggal</Text>
+        <View className='flex-1'>
+          <Text className='mb-1.5 text-xs font-medium text-gray-700'>
+            Sampai Tanggal
+          </Text>
 
           <TouchableOpacity
-            style={styles.dateButton}
+            className='h-11 flex-row items-center justify-between px-3 bg-white rounded-lg border border-gray-200'
             onPress={() => setShowEndPicker(true)}
           >
             <Text
-              style={[
-                styles.dateButtonText,
-                !endDate && styles.datePlaceholder,
-              ]}
+              className={`text-[13px] ${
+                endDate ? "text-gray-900" : "text-gray-400"
+              }`}
             >
               {formatDate(endDate)}
             </Text>
@@ -257,7 +296,7 @@ export default function HistyoryScreen() {
       {/* RESET */}
       {(searchQuery || startDate || endDate) && (
         <TouchableOpacity
-          style={styles.resetButton}
+          className='self-end flex-row items-center gap-1.5 px-3 py-2 bg-white rounded-lg border border-gray-300'
           onPress={() => {
             setSearchQuery("")
             setStartDate(null)
@@ -266,7 +305,9 @@ export default function HistyoryScreen() {
         >
           <Ionicons name='refresh-outline' size={16} color='#374151' />
 
-          <Text style={styles.resetButtonText}>Reset Filter</Text>
+          <Text className='text-xs font-medium text-gray-700'>
+            Reset Filter
+          </Text>
         </TouchableOpacity>
       )}
 
@@ -306,37 +347,42 @@ export default function HistyoryScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View className='flex-1 items-center justify-center'>
         <ActivityIndicator size='large' color='#2563eb' />
       </View>
     )
   }
 
   return (
-    <View style={styles.container}>
+    <View className='flex-1 bg-gray-50'>
       {renderFilterBar()}
 
       <FlatList
         data={filteredOrders}
         renderItem={renderOrderCard}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 20,
+        }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <View style={styles.empty}>
+          <View className='items-center p-10'>
             <Ionicons
               name='checkmark-done-circle-outline'
               size={48}
               color='#d1d5db'
             />
-            <Text style={styles.emptyText}>
+
+            <Text className='mt-3 text-sm text-gray-500'>
               {searchQuery
                 ? "Tidak ada hasil pencarian"
                 : "Belum ada order selesai"}
             </Text>
-            <Text style={styles.emptySubtext}>
+
+            <Text className='mt-1 text-xs text-gray-400'>
               Order yang sudah completed akan muncul di sini
             </Text>
           </View>
@@ -345,139 +391,3 @@ export default function HistyoryScreen() {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  filterBar: { padding: 16, paddingTop: 8, gap: 12 },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    gap: 8,
-  },
-  searchInput: { flex: 1, fontSize: 14, color: "#111827" },
-  list: { padding: 16, paddingBottom: 20 },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    borderLeftWidth: 4,
-    borderLeftColor: "#10b981",
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  orderCodeContainer: { gap: 4 },
-  orderCode: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-    fontFamily: "monospace",
-  },
-  completedDate: { fontSize: 12, color: "#9ca3af" },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  statusText: { fontSize: 11, fontWeight: "600", textTransform: "uppercase" },
-  cardContent: { gap: 8, marginBottom: 12 },
-  row: { flexDirection: "row", alignItems: "center", gap: 8 },
-  cardText: { fontSize: 14, color: "#374151", flex: 1 },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
-    marginBottom: 12,
-  },
-  dateFilterRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-
-  dateFilterItem: {
-    flex: 1,
-  },
-
-  dateLabel: {
-    fontSize: 12,
-    color: "#374151",
-    marginBottom: 6,
-    fontWeight: "500",
-  },
-
-  dateButton: {
-    height: 44,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  dateButtonText: {
-    fontSize: 13,
-    color: "#111827",
-  },
-
-  datePlaceholder: {
-    color: "#9ca3af",
-  },
-
-  resetButton: {
-    alignSelf: "flex-end",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    backgroundColor: "#fff",
-  },
-
-  resetButtonText: {
-    fontSize: 12,
-    color: "#374151",
-    fontWeight: "500",
-  },
-  totalPrice: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  paymentBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  paymentText: { fontSize: 12, fontWeight: "600" },
-  cardActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#f3f4f6",
-  },
-  viewButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  viewButtonText: { fontSize: 12, color: "#2563eb" },
-  empty: { padding: 40, alignItems: "center" },
-  emptyText: { fontSize: 14, color: "#6b7280", marginTop: 12 },
-  emptySubtext: { fontSize: 12, color: "#9ca3af", marginTop: 4 },
-})

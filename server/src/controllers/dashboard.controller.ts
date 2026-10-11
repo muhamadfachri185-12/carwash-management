@@ -171,7 +171,9 @@ export const getDashboard = async (_req: Request, res: Response) => {
             paymentStatus: "PAID",
 
             // Hanya order mulai dari awal hari ini.
-            checkInTime: { gte: today },
+            checkInTime: {
+              gte: today,
+            },
           },
 
           _sum: { total: true },
@@ -187,7 +189,9 @@ export const getDashboard = async (_req: Request, res: Response) => {
             paymentStatus: "PAID",
 
             // Mulai dari awal minggu.
-            gte: startOfWeek,
+            checkInTime: {
+              gte: startOfWeek,
+            },
           },
 
           _sum: { total: true },
@@ -203,7 +207,9 @@ export const getDashboard = async (_req: Request, res: Response) => {
             paymentStatus: "PAID",
 
             // Mulai dari awal bulan.
-            gte: startOfMonth,
+            checkInTime: {
+              gte: startOfMonth,
+            },
           },
 
           _sum: { total: true },
@@ -219,7 +225,9 @@ export const getDashboard = async (_req: Request, res: Response) => {
             paymentStatus: "PAID",
 
             // Mulai dari awal tahun.
-            gte: startOfYear,
+            checkInTime: {
+              gte: startOfYear,
+            },
           },
 
           _sum: { total: true },

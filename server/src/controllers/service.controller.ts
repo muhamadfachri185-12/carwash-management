@@ -25,6 +25,9 @@ import { AuthRequest } from "../middleware/auth.middleware"
 export const getService = async (_req: AuthRequest, res: Response) => {
   // findMany() = mengambil banyak data dari database.
   const services = await prisma.service.findMany({
+    where: {
+      isActive: true
+    },
     // Mengatur urutan data yang diambil.
     orderBy: {
       // createdAt = waktu data dibuat.

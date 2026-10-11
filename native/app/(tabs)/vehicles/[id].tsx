@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
@@ -62,7 +61,7 @@ export default function VehicleFormScreen() {
     try {
       setLoading(true)
 
-      const response = await api.get(`/vehicles/${id}`)
+      const response = await api.get(`/vehicles/${vehicleId}`)
 
       const vehicle = response.data.vehicle
 
@@ -190,7 +189,7 @@ export default function VehicleFormScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View className='flex-1 items-center justify-center bg-gray-50'>
         <ActivityIndicator size='large' color='#2563eb' />
       </View>
     )
@@ -198,52 +197,56 @@ export default function VehicleFormScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      className='flex-1 bg-gray-50'
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.container}>
+      <View className='flex-1 bg-gray-50'>
         {/* HEADER */}
-        <View style={styles.header}>
+        <View className='flex-row items-center justify-between px-4 py-4 bg-white border-b border-gray-200'>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name='arrow-back' size={24} color='#374151' />
           </TouchableOpacity>
 
-          <Text style={styles.title}>
+          <Text className='text-lg font-semibold text-gray-900'>
             {isCreate ? "Tambah Kendaraan" : "Edit Kendaraan"}
           </Text>
 
           {isEdit ? (
-            <TouchableOpacity onPress={handleDelete}>
+            <TouchableOpacity
+              onPress={handleDelete}
+              className='w-10 h-10 items-center justify-center'
+            >
               <Ionicons name='trash-outline' size={24} color='#ef4444' />
             </TouchableOpacity>
           ) : (
-            <View style={{ width: 24 }} />
+            <View className='w-10 h-10' />
           )}
         </View>
 
         {/* ERROR */}
         {error ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
+          <View className='mx-4 mt-4 p-3 bg-red-50 rounded-lg border border-red-200'>
+            <Text className='text-sm text-red-600'>{error}</Text>
           </View>
         ) : null}
 
         {/* FORM */}
-        <View style={styles.form}>
+        <View className='p-4 gap-5'>
           {/* CUSTOMER */}
-          <View style={styles.field}>
-            <Text style={styles.label}>Customer *</Text>
+          <View className='gap-2'>
+            <Text className='text-sm font-medium text-gray-700'>
+              Customer *
+            </Text>
 
             <TouchableOpacity
-              style={styles.dropdownButton}
+              className='h-12 flex-row items-center justify-between px-4 bg-white rounded-lg border border-gray-300'
               onPress={() => setShowCustomerDropdown(!showCustomerDropdown)}
               disabled={saving}
             >
               <Text
-                style={[
-                  styles.dropdownButtonText,
-                  !selectedCustomerId && styles.placeholderText,
-                ]}
+                className={`flex-1 mr-2 text-base ${
+                  selectedCustomerId ? "text-gray-900" : "text-gray-400"
+                }`}
                 numberOfLines={1}
               >
                 {selectedCustomerId
@@ -260,10 +263,10 @@ export default function VehicleFormScreen() {
             </TouchableOpacity>
 
             {showCustomerDropdown && (
-              <View style={styles.dropdownList}>
+              <View className='h-52 mt-1 bg-white rounded-lg border border-gray-300 overflow-hidden'>
                 {customers.length === 0 ? (
-                  <View style={styles.emptyCustomer}>
-                    <Text style={styles.emptyCustomerText}>
+                  <View className='p-5 items-center'>
+                    <Text className='text-sm text-gray-500'>
                       Tidak ada customer
                     </Text>
                   </View>
@@ -276,7 +279,7 @@ export default function VehicleFormScreen() {
                     keyboardShouldPersistTaps='handled'
                     renderItem={({ item }) => (
                       <TouchableOpacity
-                        style={styles.dropdownItem}
+                        className='px-3 py-3 border-b border-gray-200'
                         onPress={() => {
                           setSelectedCustomerId(item.id)
                           setShowCustomerDropdown(false)
@@ -284,16 +287,18 @@ export default function VehicleFormScreen() {
                         }}
                       >
                         <Text
-                          style={[
-                            styles.dropdownItemText,
-                            selectedCustomerId === item.id &&
-                              styles.dropdownItemActive,
-                          ]}
+                          className={`text-sm ${
+                            selectedCustomerId === item.id
+                              ? "font-semibold text-blue-600"
+                              : "font-medium text-gray-700"
+                          }`}
                         >
                           {item.name}
                         </Text>
 
-                        <Text style={styles.dropdownPhone}>{item.phone}</Text>
+                        <Text className='mt-0.5 text-xs text-gray-500'>
+                          {item.phone}
+                        </Text>
                       </TouchableOpacity>
                     )}
                   />
@@ -303,11 +308,13 @@ export default function VehicleFormScreen() {
           </View>
 
           {/* PLAT */}
-          <View style={styles.field}>
-            <Text style={styles.label}>Plat Nomor *</Text>
+          <View className='gap-2'>
+            <Text className='text-sm font-medium text-gray-700'>
+              Plat Nomor *
+            </Text>
 
             <TextInput
-              style={styles.input}
+              className='h-12 px-4 text-base text-gray-900 bg-white rounded-lg border border-gray-300'
               placeholder='B 1234 ABC'
               value={plateNumber}
               onChangeText={setPlateNumber}
@@ -317,11 +324,11 @@ export default function VehicleFormScreen() {
           </View>
 
           {/* BRAND */}
-          <View style={styles.field}>
-            <Text style={styles.label}>Merek *</Text>
+          <View className='gap-2'>
+            <Text className='text-sm font-medium text-gray-700'>Merek *</Text>
 
             <TextInput
-              style={styles.input}
+              className='h-12 px-4 text-base text-gray-900 bg-white rounded-lg border border-gray-300'
               placeholder='Toyota, Honda, dll'
               value={brand}
               onChangeText={setBrand}
@@ -330,11 +337,11 @@ export default function VehicleFormScreen() {
           </View>
 
           {/* MODEL */}
-          <View style={styles.field}>
-            <Text style={styles.label}>Model *</Text>
+          <View className='gap-2'>
+            <Text className='text-sm font-medium text-gray-700'>Model *</Text>
 
             <TextInput
-              style={styles.input}
+              className='h-12 px-4 text-base text-gray-900 bg-white rounded-lg border border-gray-300'
               placeholder='Avanza, City, dll'
               value={model}
               onChangeText={setModel}
@@ -344,14 +351,16 @@ export default function VehicleFormScreen() {
 
           {/* SAVE */}
           <TouchableOpacity
-            style={[styles.button, saving && styles.buttonDisabled]}
+            className={`h-12 mt-2 rounded-lg items-center justify-center ${
+              saving ? "bg-blue-400" : "bg-blue-600"
+            }`}
             onPress={handleSave}
             disabled={saving}
           >
             {saving ? (
               <ActivityIndicator color='#fff' />
             ) : (
-              <Text style={styles.buttonText}>
+              <Text className='text-base font-semibold text-white'>
                 {isCreate ? "Simpan" : "Update"}
               </Text>
             )}
@@ -361,157 +370,3 @@ export default function VehicleFormScreen() {
     </KeyboardAvoidingView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f9fafb",
-  },
-
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-  },
-
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#111827",
-  },
-
-  form: {
-    padding: 16,
-    gap: 20,
-  },
-
-  field: {
-    gap: 8,
-  },
-
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#374151",
-  },
-
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    backgroundColor: "#fff",
-    color: "#111827",
-  },
-
-  dropdownButton: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-
-  dropdownButtonText: {
-    flex: 1,
-    fontSize: 16,
-    color: "#111827",
-    marginRight: 8,
-  },
-
-  placeholderText: {
-    color: "#9ca3af",
-  },
-
-  dropdownList: {
-    height: 200,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    marginTop: 4,
-    backgroundColor: "#fff",
-    overflow: "hidden",
-  },
-
-  dropdownItem: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-  },
-
-  dropdownItemText: {
-    fontSize: 14,
-    color: "#374151",
-    fontWeight: "500",
-  },
-
-  dropdownItemActive: {
-    color: "#2563eb",
-    fontWeight: "600",
-  },
-
-  dropdownPhone: {
-    fontSize: 12,
-    color: "#6b7280",
-    marginTop: 3,
-  },
-
-  emptyCustomer: {
-    padding: 20,
-    alignItems: "center",
-  },
-
-  emptyCustomerText: {
-    color: "#6b7280",
-  },
-
-  button: {
-    height: 48,
-    backgroundColor: "#2563eb",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 12,
-  },
-
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-
-  errorBox: {
-    margin: 16,
-    padding: 12,
-    backgroundColor: "#fef2f2",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#fecaca",
-  },
-
-  errorText: {
-    color: "#dc2626",
-    fontSize: 14,
-  },
-})

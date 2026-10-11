@@ -22,7 +22,7 @@ interface JwtPayload {
   userId: number
 
   // Role user hanya boleh ADMIN atau STAFF.
-  role: "ADMIN" | "STAFF"
+  role: "ADMIN" | "STAFF" | "CUSTOMER"
 }
 
 // ======================================================
@@ -149,6 +149,169 @@ export const authenticate = (
     // maka request ditolak.
     return res.status(401).json({
       message: "Invalid or expired token",
+    })
+  }
+}
+
+type UserRole = "ADMIN" | "STAFF" | "CUSTOMER"
+export const authorizeRole = (...allowedRoles: UserRole[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Authentication required",
+      })
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: "ou do not have permission to access this resource",
+      })
+    }
+    next()
+  }
+}
+
+
+// ======================================================
+// OUTLET ACCESS TOKEN
+// ======================================================
+
+// Bentuk payload khusus untuk token
+// yang diberikan setelah customer berhasil
+// melakukan scan QR outlet.
+interface OutletAccessPayload {
+  // ID user customer.
+  userId: number
+
+  // Role harus CUSTOMER.
+  role: "CUSTOMER"
+
+  // Menandakan bahwa token ini
+  // memang digunakan untuk akses order outlet.
+  purpose: "OUTLET_ORDER"
+
+  // Karena project kita hanya memiliki
+  // satu outlet.
+  outlet: "MAIN"
+}
+
+// ======================================================
+// OUTLET ACCESS MIDDLEWARE
+// ======================================================
+
+// Middleware ini digunakan untuk memastikan
+// customer sudah berhasil melakukan verifikasi
+// QR outlet sebelum membuat order.
+export const requireOutletAccess = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  // Pastikan user sudah login terlebih dahulu.
+  //
+  // Middleware ini nantinya dipasang setelah
+  // middleware authenticate.
+  if (!req.user) {
+    return res.status(401).json({
+      message: "Authentication required",
+    })
+  }
+
+  // Ambil outlet access token dari custom header.
+  //
+  // Frontend nantinya mengirim:
+  //
+  // X-Outlet-Access-Token: eyJhbGciOi...
+  const outletToken = req.headers["x-outlet-access-token"]
+
+  // Header bisa memiliki tipe string atau array.
+  //
+  // Kita hanya menerima satu token dalam bentuk string.
+  if (typeof outletToken !== "string" || !outletToken) {
+    return res.status(403).json({
+      message: "Outlet access required",
+    })
+  }
+
+  // Ambil JWT secret yang sama
+  // dengan authentication JWT.
+  const JWT_SECRET = process.env.JWT_SECRET
+
+  // Pastikan JWT secret tersedia.
+  if (!JWT_SECRET) {
+    return res.status(500).json({
+      message: "JWT secret is not configured",
+    })
+  }
+
+  try {
+    // Verifikasi outlet access token.
+    //
+    // jwt.verify() juga otomatis mengecek
+    // apakah token sudah expired.
+    const decoded = jwt.verify(
+      outletToken,
+      JWT_SECRET,
+    ) as OutletAccessPayload
+
+    // Pastikan token memang untuk CUSTOMER.
+    if (decoded.role !== "CUSTOMER") {
+      return res.status(403).json({
+        message: "Customer outlet access required",
+      })
+    }
+
+    // Pastikan token memang dibuat
+    // khusus untuk akses order outlet.
+    if (decoded.purpose !== "OUTLET_ORDER") {
+      return res.status(403).json({
+        message: "Invalid outlet access token",
+      })
+    }
+
+    // Pastikan token memang untuk outlet utama.
+    if (decoded.outlet !== "MAIN") {
+      return res.status(403).json({
+        message: "Invalid outlet",
+      })
+    }
+
+    // Pastikan outlet token dimiliki
+    // oleh user yang sedang login.
+    //
+    // Contoh:
+    //
+    // Login JWT:
+    // userId = 123
+    //
+    // Outlet JWT:
+    // userId = 123
+    //
+    // → valid
+    //
+    // Kalau:
+    //
+    // Login JWT:
+    // userId = 123
+    //
+    // Outlet JWT:
+    // userId = 456
+    //
+    // → ditolak.
+    if (decoded.userId !== req.user.userId) {
+      return res.status(403).json({
+        message: "Outlet access does not belong to this user",
+      })
+    }
+
+    // Semua pengecekan berhasil.
+    //
+    // Lanjutkan ke controller berikutnya.
+    next()
+  } catch {
+    // Token tidak valid atau sudah expired.
+    return res.status(403).json({
+      message: "Invalid or expired outlet access token",
     })
   }
 }

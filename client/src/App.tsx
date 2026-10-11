@@ -1,3 +1,5 @@
+import { useEffect } from "react"
+import socket from "./lib/socket"
 import {
   BrowserRouter,
   Routes,
@@ -25,6 +27,23 @@ import "./App.css"
 import DashboardPage from "./pages/DashboardPage"
 
 export default function App() {
+  useEffect(() => {
+    socket.connect()
+
+    socket.on("connect", () => {
+      console.log("Staff/Admin Socket connected:", socket.id)
+    })
+
+    socket.on("disconnect", () => {
+      console.log("Staff/Admin socket disconnected")
+    })
+
+    return () => {
+      socket.off("connect")
+      socket.off("disconnect")
+      socket.disconnect()
+    }
+  }, [])
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -45,7 +64,7 @@ export default function App() {
               element={
                 <>
                   <Sidebar />
-                  <main className='ml-60 p-8'>
+                  <main className='ml-64 min-w-0 overflow-x-hidden'>
                     <Outlet />
                   </main>
                 </>

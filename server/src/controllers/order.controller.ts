@@ -24,6 +24,10 @@ import { paymentSchema } from "../schemas/payment.schema"
 // dari authentication middleware
 import { AuthRequest } from "../middleware/auth.middleware"
 
+// Import dari websocket
+import { getIO } from "../lib/socket"
+import { PaymentStatus } from "../generated/prisma/enums"
+
 // ======================================================
 // ORDER INCLUDE
 // ======================================================
@@ -494,6 +498,26 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         // completedAt tidak diubah.
         completedAt: status === "COMPLETED" ? new Date() : undefined,
       },
+      include: {
+        customer: true,
+      },
+    })
+
+    const io = getIO()
+    // Kirim ke Customer yang memiliki order
+    io.to(`customer:${updatedOrder.customer.userId}`).emit(
+      "order:status-updated",
+      {
+        orderId: updatedOrder.id,
+        status: updatedOrder.status,
+        completedAt: updatedOrder.completedAt,
+      },
+    )
+    // Kirim ke Staff/Admin
+    io.emit("order:status-updated", {
+      orderId: updatedOrder.id,
+      status: updatedOrder.status,
+      completedAt: updatedOrder.completedAt,
     })
 
     return res.status(200).json({
@@ -639,13 +663,36 @@ export const recordPayment = async (req: AuthRequest, res: Response) => {
 
     // Setelah payment berhasil dibuat,
     // ubah paymentStatus order menjadi PAID.
-    await prisma.order.update({
+    const updatedOrder = await prisma.order.update({
       where: {
         id: Number(id),
       },
       data: {
         paymentStatus: "PAID",
       },
+      include: {
+        customer: true,
+      },
+    })
+
+    // Ambil instance Socket.IO
+    const io = getIO()
+
+    console.log("Mengirim event payment:updated", {
+      orderId: updatedOrder.id,
+      paymentStatus: updatedOrder.paymentStatus,
+    })
+
+    // Kirim event ke Customer Web
+    io.to(`customer:${updatedOrder.customer.userId}`).emit("payment:updated", {
+      orderId: updatedOrder.id,
+      paymentStatus: updatedOrder.paymentStatus,
+    })
+
+    // Kirim update payment ke Staff/Admin
+    io.emit("payment:updated", {
+      orderId: updatedOrder.id,
+      paymentStatus: updatedOrder.paymentStatus,
     })
 
     // ==================================================

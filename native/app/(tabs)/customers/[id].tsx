@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
@@ -127,7 +126,7 @@ export default function CustomerFormScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View className='flex-1 items-center justify-center bg-gray-50'>
         <ActivityIndicator size='large' color='#2563eb' />
       </View>
     )
@@ -135,35 +134,47 @@ export default function CustomerFormScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      className='flex-1 bg-gray-50'
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
+      <View className='flex-1 bg-gray-50'>
+        {/* HEADER */}
+        <View className='flex-row items-center justify-between px-4 py-4 bg-white border-b border-gray-200'>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className='w-10 h-10 items-center justify-center'
+          >
             <Ionicons name='arrow-back' size={24} color='#374151' />
           </TouchableOpacity>
-          <Text style={styles.title}>
+          <Text className='text-lg font-semibold text-gray-900'>
             {isCreate ? "Tambah Customer" : "Edit Customer"}
           </Text>
-          {isEdit && (
-            <TouchableOpacity onPress={handleDelete}>
+          {isEdit ? (
+            <TouchableOpacity
+              onPress={handleDelete}
+              className='w-10 h-10 items-center justify-center'
+            >
               <Ionicons name='trash-outline' size={24} color='#ef4444' />
             </TouchableOpacity>
+          ) : (
+            <View className='w-10 h-10' />
           )}
         </View>
 
+        {/* Error */}
         {error ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
+          <View className='mx-4 mt-4 p-3 bg-red-50 rounded-lg border border-red-200'>
+            <Text className='text-sm text-red-600'>{error}</Text>
           </View>
         ) : null}
 
-        <View style={styles.form}>
-          <View style={styles.field}>
-            <Text style={styles.label}>Nama *</Text>
+        {/*FORM */}
+        <View className='p-4 gap-5'>
+          {/*NAMA*/}
+          <View className='gap-2'>
+            <Text className='text-sm font-medium text-gray-700'>Nama *</Text>
             <TextInput
-              style={styles.input}
+              className='h-12 px-4 text-base text-gray-900 bg-white rounded-lg border border-gray-300'
               placeholder='Nama customer'
               value={name}
               onChangeText={setName}
@@ -171,10 +182,11 @@ export default function CustomerFormScreen() {
             />
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Telepon *</Text>
+          {/*TELEPON*/}
+          <View className='gap-2'>
+            <Text className='text-sm font-medium text-gray-700'>Telepon *</Text>
             <TextInput
-              style={styles.input}
+              className='h-12 px-4 text-base text-gray-900 bg-white rounded-lg border border-gray-300'
               placeholder='08xx-xxxx-xxxx'
               value={phone}
               onChangeText={setPhone}
@@ -182,11 +194,11 @@ export default function CustomerFormScreen() {
               editable={!saving}
             />
           </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Alamat</Text>
+          {/* ALAMAT */}
+          <View className='gap-2'>
+            <Text className='text-sm font-medium text-gray-700'>Alamat</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              className='h-20 px-4 py-3 text-base text-gray-900 bg-white rounded-lg border border-gray-300'
               placeholder='Alamat (opsional)'
               value={address}
               onChangeText={setAddress}
@@ -198,14 +210,14 @@ export default function CustomerFormScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, saving && styles.buttonDisabled]}
+            className={`h-12 mt-2 rounded-lg items-center justify-center ${saving ? "bg-blue-400" : "bg-blue-600"}`}
             onPress={handleSave}
             disabled={saving}
           >
             {saving ? (
               <ActivityIndicator color='#fff' />
             ) : (
-              <Text style={styles.buttonText}>
+              <Text className='text-base font-semibold text-white'>
                 {isCreate ? "Simpan" : "Update"}
               </Text>
             )}
@@ -215,51 +227,3 @@ export default function CustomerFormScreen() {
     </KeyboardAvoidingView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-  },
-  title: { fontSize: 18, fontWeight: "600", color: "#111827" },
-  form: { padding: 16, gap: 20 },
-  field: { gap: 8 },
-  label: { fontSize: 14, fontWeight: "500", color: "#374151" },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    backgroundColor: "#fff",
-    color: "#111827",
-  },
-  textArea: { height: 80, paddingVertical: 12 },
-  button: {
-    height: 48,
-    backgroundColor: "#2563eb",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 12,
-  },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  errorBox: {
-    margin: 16,
-    padding: 12,
-    backgroundColor: "#fef2f2",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#fecaca",
-  },
-  errorText: { color: "#dc2626", fontSize: 14 },
-})

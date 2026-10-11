@@ -23,7 +23,36 @@ import { AuthRequest } from "../middleware/auth.middleware"
 // ======================================================
 
 // Fungsi untuk mengambil semua kendaraan.
-export const getVehicles = async (_req: AuthRequest, res: Response) => {
+export const getVehicles = async (req: AuthRequest, res: Response) => {
+  // Customer hanya boleh melihat kendaraannya sendiri.
+  if (req.user?.role === "CUSTOMER") {
+    const customer = await prisma.customer.findUnique({
+      where: {
+        userId: req.user.userId,
+      },
+    })
+
+    // User yang belum memiliki Customer belum punya kendaran
+    if (!customer) {
+      return res.status(200).json({
+        vehicles: [],
+      })
+    }
+
+    const vehicles = await prisma.vehicle.findMany({
+      where: {
+        customerId: customer.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    })
+
+    return res.status(200).json({
+      vehicles,
+    })
+  }
+
   // findMany() = mengambil banyak data dari database.
   const vehicles = await prisma.vehicle.findMany({
     // include digunakan untuk mengambil data
@@ -49,6 +78,58 @@ export const getVehicles = async (_req: AuthRequest, res: Response) => {
   // 200 = request berhasil.
   return res.status(200).json({
     vehicles,
+  })
+}
+
+export const getVehicleById = async (req: AuthRequest, res: Response) => {
+  // Mengambil ID vehicle dari URL
+  //
+  // Contoh:
+  // GET /vehicles/5
+  //
+  // req.params.id = "5"
+
+  const { id } = req.params
+
+  // Cari vehicle berdasarkan ID
+  const vehicle = await prisma.vehicle.findUnique({
+    where: {
+      // ID dari URL berupa string,
+      // sedangkan ID database berupa number
+      id: Number(id),
+    },
+
+    // Ambil data pemilik customer
+    include: {
+      customer: true,
+    },
+  })
+
+  //
+  if (req.user?.role === "CUSTOMER") {
+    const customer = await prisma.customer.findUnique({
+      where: {
+        userId: req.user.userId,
+      },
+    })
+
+    if (!customer || vehicle?.customerId !== customer.id) {
+      return res.status(404).json({
+        message: "Vehicle not found",
+      })
+    }
+  }
+
+  // Jika vehicle tidak ditemukan
+  if (!vehicle) {
+    return res.status(404).json({
+      message: "Vehicle not found",
+    })
+  }
+
+  // Response jika berhasil
+  return res.status(200).json({
+    vehicle,
   })
 }
 

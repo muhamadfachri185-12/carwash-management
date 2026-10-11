@@ -4,7 +4,6 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   RefreshControl,
   Alert,
@@ -189,7 +188,7 @@ export default function OrderScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        className='p-4 mb-3 bg-white rounded-xl'
         onPress={() =>
           router.push({
             pathname: "/(tabs)/orders/[id]",
@@ -200,30 +199,28 @@ export default function OrderScreen() {
         }
       >
         {/* HEADER */}
-        <View style={styles.cardHeader}>
-          <View style={styles.orderCodeContainer}>
-            <Text style={styles.orderCode}>{item.orderCode}</Text>
+        <View className='flex-row items-start justify-between mb-3'>
+          <View className='gap-1'>
+            <Text className='text-base font-bold text-gray-900'>
+              {item.orderCode}
+            </Text>
 
-            <Text style={styles.checkInTime}>
+            <Text className='text-xs text-gray-400'>
               {new Date(item.createdAt).toLocaleDateString("id-ID")}
             </Text>
           </View>
 
           <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor: statusColor.bg,
-              },
-            ]}
+            className='px-2.5 py-1 rounded-xl'
+            style={{
+              backgroundColor: statusColor.bg,
+            }}
           >
             <Text
-              style={[
-                styles.statusText,
-                {
-                  color: statusColor.text,
-                },
-              ]}
+              className='text-[11px] font-semibold uppercase'
+              style={{
+                color: statusColor.text,
+              }}
             >
               {item.status.replace("_", " ")}
             </Text>
@@ -231,30 +228,30 @@ export default function OrderScreen() {
         </View>
 
         {/* CONTENT */}
-        <View style={styles.cardContent}>
+        <View className='gap-2 mb-3'>
           {/* CUSTOMER */}
-          <View style={styles.row}>
+          <View className='flex-row items-center gap-2'>
             <Ionicons name='person-outline' size={16} color='#6b7280' />
 
-            <Text style={styles.cardText} numberOfLines={1}>
+            <Text className='flex-1 text-sm text-gray-700' numberOfLines={1}>
               {item.customer?.name || "-"}
             </Text>
           </View>
 
           {/* VEHICLE */}
-          <View style={styles.row}>
+          <View className='flex-row items-center gap-2'>
             <Ionicons name='car-outline' size={16} color='#6b7280' />
 
-            <Text style={styles.cardText}>
+            <Text className='flex-1 text-sm text-gray-700'>
               {item.vehicle?.plateNumber || "-"}
             </Text>
           </View>
 
           {/* SERVICE */}
-          <View style={styles.row}>
+          <View className='flex-row items-center gap-2'>
             <Ionicons name='list-outline' size={16} color='#6b7280' />
 
-            <Text style={styles.cardText}>
+            <Text className='flex-1 text-sm text-gray-700'>
               {item.orderItems.length} service
               {item.orderItems.length > 1 ? "s" : ""}
             </Text>
@@ -262,26 +259,22 @@ export default function OrderScreen() {
         </View>
 
         {/* FOOTER */}
-        <View style={styles.cardFooter}>
-          <Text style={styles.totalPrice}>
+        <View className='flex-row items-center justify-between pt-3 mb-3 border-t border-gray-200'>
+          <Text className='text-lg font-bold text-gray-900'>
             Rp {item.total.toLocaleString("id-ID")}
           </Text>
 
           <View
-            style={[
-              styles.paymentBadge,
-              {
-                backgroundColor: paymentBadge.bg,
-              },
-            ]}
+            className='px-2 py-1 rounded-lg'
+            style={{
+              backgroundColor: paymentBadge.bg,
+            }}
           >
             <Text
-              style={[
-                styles.paymentText,
-                {
-                  color: paymentBadge.text,
-                },
-              ]}
+              className='text-xs font-semibold'
+              style={{
+                color: paymentBadge.text,
+              }}
             >
               {item.paymentStatus}
             </Text>
@@ -289,10 +282,10 @@ export default function OrderScreen() {
         </View>
 
         {/* ACTION BUTTONS */}
-        <View style={styles.cardActions}>
+        <View className='flex-row gap-2 pt-2 border-t border-gray-100'>
           {/* DETAIL */}
           <TouchableOpacity
-            style={styles.actionButton}
+            className='flex-row items-center gap-1 px-3 py-1.5 rounded-md bg-gray-50'
             onPress={() =>
               router.push({
                 pathname: "/(tabs)/orders/[id]",
@@ -304,7 +297,7 @@ export default function OrderScreen() {
           >
             <Ionicons name='eye-outline' size={16} color='#2563eb' />
 
-            <Text style={styles.actionButtonText}>Detail</Text>
+            <Text className='text-xs text-gray-700'>Detail</Text>
           </TouchableOpacity>
 
           {/* EDIT + DELETE */}
@@ -312,12 +305,7 @@ export default function OrderScreen() {
             <>
               {/* EDIT */}
               <TouchableOpacity
-                style={[
-                  styles.actionButton,
-                  {
-                    backgroundColor: "#eff6ff",
-                  },
-                ]}
+                className='flex-row items-center gap-1 px-3 py-1.5 rounded-md bg-blue-50'
                 onPress={() =>
                   router.push({
                     pathname: "/(tabs)/orders/[id]",
@@ -329,40 +317,17 @@ export default function OrderScreen() {
               >
                 <Ionicons name='create-outline' size={16} color='#2563eb' />
 
-                <Text
-                  style={[
-                    styles.actionButtonText,
-                    {
-                      color: "#2563eb",
-                    },
-                  ]}
-                >
-                  Edit
-                </Text>
+                <Text className='text-xs text-blue-600'>Edit</Text>
               </TouchableOpacity>
 
               {/* DELETE */}
               <TouchableOpacity
-                style={[
-                  styles.actionButton,
-                  {
-                    backgroundColor: "#fef2f2",
-                  },
-                ]}
+                className='flex-row items-center gap-1 px-3 py-1.5 rounded-md bg-red-50'
                 onPress={() => handleDeleteOrder(item)}
               >
                 <Ionicons name='trash-outline' size={16} color='#ef4444' />
 
-                <Text
-                  style={[
-                    styles.actionButtonText,
-                    {
-                      color: "#ef4444",
-                    },
-                  ]}
-                >
-                  Hapus
-                </Text>
+                <Text className='text-xs text-red-500'>Hapus</Text>
               </TouchableOpacity>
             </>
           )}
@@ -373,13 +338,13 @@ export default function OrderScreen() {
 
   // SEARCH + FILTER
   const renderFilterBar = () => (
-    <View style={styles.filterBar}>
+    <View className='gap-3 px-4 pt-2 pb-3'>
       {/* SEARCH */}
-      <View style={styles.searchContainer}>
+      <View className='flex-row items-center gap-2 px-4 py-3 bg-white rounded-xl border border-gray-200'>
         <Ionicons name='search' size={18} color='#9ca3af' />
 
         <TextInput
-          style={styles.searchInput}
+          className='flex-1 text-sm text-gray-900'
           placeholder='Cari customer, plat, atau kode...'
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -394,29 +359,29 @@ export default function OrderScreen() {
       </View>
 
       {/* DATE FILTER */}
-      <View style={styles.dateFilterRow}>
+      <View className='flex-row items-center gap-2'>
         <TouchableOpacity
-          style={styles.dateButton}
+          className='flex-1 flex-row items-center gap-2 px-3 py-2.5 bg-white rounded-lg border border-gray-200'
           onPress={() => setShowStartPicker(true)}
         >
           <Ionicons name='calendar-outline' size={18} color='#6b7280' />
 
-          <Text style={styles.dateButtonText}>
+          <Text className='flex-1 text-[13px] text-gray-700'>
             {startDate
               ? startDate.toLocaleDateString("id-ID")
               : "Tanggal mulai"}
           </Text>
         </TouchableOpacity>
 
-        <Text style={styles.dateSeparator}>-</Text>
+        <Text className='text-sm text-gray-400'>-</Text>
 
         <TouchableOpacity
-          style={styles.dateButton}
+          className='flex-1 flex-row items-center gap-2 px-3 py-2.5 bg-white rounded-lg border border-gray-200'
           onPress={() => setShowEndPicker(true)}
         >
           <Ionicons name='calendar-outline' size={18} color='#6b7280' />
 
-          <Text style={styles.dateButtonText}>
+          <Text className='flex-1 text-[13px] text-gray-700'>
             {endDate ? endDate.toLocaleDateString("id-ID") : "Tanggal selesai"}
           </Text>
         </TouchableOpacity>
@@ -434,27 +399,31 @@ export default function OrderScreen() {
       </View>
 
       {/* STATUS FILTER */}
-      <View style={styles.filterRow}>
+      <View className='flex-row flex-wrap gap-2'>
         {(["ALL", "WAITING", "IN_PROGRESS", "COMPLETED"] as StatusFilter[]).map(
-          (status) => (
-            <TouchableOpacity
-              key={status}
-              style={[
-                styles.filterButton,
-                statusFilter === status && styles.filterButtonActive,
-              ]}
-              onPress={() => setStatusFilter(status)}
-            >
-              <Text
-                style={[
-                  styles.filterButtonText,
-                  statusFilter === status && styles.filterButtonTextActive,
-                ]}
+          (status) => {
+            const isActive = statusFilter === status
+
+            return (
+              <TouchableOpacity
+                key={status}
+                className={`px-3 py-1.5 rounded-2xl border ${
+                  isActive
+                    ? "bg-blue-600 border-blue-600"
+                    : "bg-white border-gray-200"
+                }`}
+                onPress={() => setStatusFilter(status)}
               >
-                {status === "ALL" ? "Semua" : status.replace("_", " ")}
-              </Text>
-            </TouchableOpacity>
-          ),
+                <Text
+                  className={`text-xs ${
+                    isActive ? "font-semibold text-white" : "text-gray-500"
+                  }`}
+                >
+                  {status === "ALL" ? "Semua" : status.replace("_", " ")}
+                </Text>
+              </TouchableOpacity>
+            )
+          },
         )}
       </View>
     </View>
@@ -463,70 +432,40 @@ export default function OrderScreen() {
   // LOADING
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View className='flex-1 items-center justify-center bg-gray-50'>
         <ActivityIndicator size='large' color='#2563eb' />
       </View>
     )
   }
 
-  {
-    showStartPicker && (
-      <DateTimePicker
-        value={startDate || new Date()}
-        mode='date'
-        display='default'
-        onChange={(event, selectedDate) => {
-          setShowStartPicker(false)
-
-          if (selectedDate) {
-            setStartDate(selectedDate)
-          }
-        }}
-      />
-    )
-  }
-
-  {
-    showEndPicker && (
-      <DateTimePicker
-        value={endDate || new Date()}
-        mode='date'
-        display='default'
-        onChange={(event, selectedDate) => {
-          setShowEndPicker(false)
-
-          if (selectedDate) {
-            setEndDate(selectedDate)
-          }
-        }}
-      />
-    )
-  }
-
   return (
-    <View style={styles.container}>
+    <View className='flex-1 bg-gray-50'>
       {renderFilterBar()}
 
       <FlatList
         data={filteredOrders}
         renderItem={renderOrderCard}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={{
+          padding: 16,
+          paddingTop: 4,
+          paddingBottom: 100,
+        }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <View style={styles.empty}>
+          <View className='items-center p-10'>
             <Ionicons name='clipboard-outline' size={48} color='#d1d5db' />
 
-            <Text style={styles.emptyText}>
+            <Text className='mt-3 text-sm text-gray-500'>
               {searchQuery || statusFilter !== "ALL"
                 ? "Tidak ada order sesuai filter"
                 : "Belum ada order"}
             </Text>
 
             {!searchQuery && statusFilter === "ALL" && (
-              <Text style={styles.emptySubtext}>
+              <Text className='mt-1 text-xs text-gray-400'>
                 Tekan tombol + untuk membuat order baru
               </Text>
             )}
@@ -536,267 +475,43 @@ export default function OrderScreen() {
 
       {/* ADD ORDER */}
       <TouchableOpacity
-        style={styles.fab}
+        className='absolute bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 items-center justify-center'
         onPress={() => router.push("/(tabs)/orders/create")}
       >
         <Ionicons name='add' size={24} color='#fff' />
       </TouchableOpacity>
+
+      {/* START DATE PICKER */}
+      {showStartPicker && (
+        <DateTimePicker
+          value={startDate || new Date()}
+          mode='date'
+          display='default'
+          onChange={(event, selectedDate) => {
+            setShowStartPicker(false)
+
+            if (selectedDate) {
+              setStartDate(selectedDate)
+            }
+          }}
+        />
+      )}
+
+      {/* END DATE PICKER */}
+      {showEndPicker && (
+        <DateTimePicker
+          value={endDate || new Date()}
+          mode='date'
+          display='default'
+          onChange={(event, selectedDate) => {
+            setShowEndPicker(false)
+
+            if (selectedDate) {
+              setEndDate(selectedDate)
+            }
+          }}
+        />
+      )}
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f9fafb",
-  },
-
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  filterBar: {
-    padding: 16,
-    paddingTop: 8,
-    gap: 12,
-  },
-
-  dateFilterRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  dateButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "#fff",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-  },
-
-  dateButtonText: {
-    flex: 1,
-    fontSize: 13,
-    color: "#374151",
-  },
-
-  dateSeparator: {
-    fontSize: 14,
-    color: "#9ca3af",
-  },
-
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    gap: 8,
-  },
-
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: "#111827",
-  },
-
-  filterRow: {
-    flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-
-  filterButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#fff",
-  },
-
-  filterButtonActive: {
-    backgroundColor: "#2563eb",
-    borderColor: "#2563eb",
-  },
-
-  filterButtonText: {
-    fontSize: 12,
-    color: "#6b7280",
-  },
-
-  filterButtonTextActive: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-
-  list: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-
-  orderCodeContainer: {
-    gap: 4,
-  },
-
-  orderCode: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-    fontFamily: "monospace",
-  },
-
-  checkInTime: {
-    fontSize: 12,
-    color: "#9ca3af",
-  },
-
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-
-  statusText: {
-    fontSize: 11,
-    fontWeight: "600",
-    textTransform: "uppercase",
-  },
-
-  cardContent: {
-    gap: 8,
-    marginBottom: 12,
-  },
-
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  cardText: {
-    fontSize: 14,
-    color: "#374151",
-    flex: 1,
-  },
-
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
-    marginBottom: 12,
-  },
-
-  totalPrice: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111827",
-  },
-
-  paymentBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-
-  paymentText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  cardActions: {
-    flexDirection: "row",
-    gap: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#f3f4f6",
-  },
-
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: "#f9fafb",
-  },
-
-  actionButtonText: {
-    fontSize: 12,
-    color: "#374151",
-  },
-
-  empty: {
-    padding: 40,
-    alignItems: "center",
-  },
-
-  emptyText: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginTop: 12,
-  },
-
-  emptySubtext: {
-    fontSize: 12,
-    color: "#9ca3af",
-    marginTop: 4,
-  },
-
-  fab: {
-    position: "absolute",
-    right: 24,
-    bottom: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#2563eb",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 8,
-  },
-})

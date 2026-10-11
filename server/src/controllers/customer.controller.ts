@@ -43,6 +43,42 @@ export const getCustomers = async (_req: AuthRequest, res: Response) => {
 }
 
 // ======================================================
+// GET CUSTOMER BY ID
+// ======================================================
+
+// Fungsi untuk mengambil satu customer berdasarkan ID
+export const getCustomerById = async (req: AuthRequest, res: Response) => {
+  // Mengambil ID dari URL
+  //
+  // Contoh:
+  // GET /customers/7
+  //
+  // req.params.id = "7"
+  const { id } = req.params
+
+  // Cari customer berdasarkan ID
+  const customer = await prisma.customer.findUnique({
+    where: {
+      // ID dari URL berupa string,
+      // sedangkan ID database berupa number
+      id: Number(id),
+    },
+  })
+
+  // Kalau customer tidak ditemukan
+  if (!customer) {
+    return res.status(404).json({
+      message: "Customer not found",
+    })
+  }
+
+  // Kirim customer ke frontend
+  return res.status(200).json({
+    customer,
+  })
+}
+
+// ======================================================
 // CREATE CUSTOMER
 // ======================================================
 

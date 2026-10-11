@@ -4,6 +4,8 @@
 //             kalau dependency-nya tidak berubah
 import { useState, useEffect, useMemo } from "react"
 
+import socket from "@/lib/socket"
+
 // useNavigate -> fungsi React Router untuk pindah halaman lewat kode
 import { useNavigate } from "react-router-dom"
 
@@ -35,14 +37,12 @@ import {
 import {
   ClipboardList,
   Plus,
-  Search,
   Filter,
   Eye,
   Edit,
   Trash2,
   Car,
   User,
-  CalendarDays,
 } from "lucide-react"
 
 // ============================================================
@@ -331,6 +331,47 @@ export default function OrderPage() {
   // Cocok digunakan untuk mengambil data awal dari API.
   useEffect(() => {
     fetchData()
+  }, [])
+
+  // Useeffect memanggil dengan socket
+  useEffect(() => {
+    const handleOrderCreated = (data: { orderId: number }) => {
+      console.log("Order baru dibuat, mengambil data terbaru...", data)
+
+      fetchData()
+    }
+
+    const handleOrderStatusUpdated = (data: {
+      orderId: number
+      status: string
+      completedAt: string | null
+    }) => {
+      console.log("Status order berubah:", data)
+
+      fetchData()
+    }
+
+    const handlePaymentStatusUpdated = (data: {
+      orderId: number
+      paymentStatus: string
+    }) => {
+      console.log("Payment status berubah:", data)
+      fetchData()
+    }
+
+    socket.on("order:created", handleOrderCreated)
+
+    socket.on("order:status-updated", handleOrderStatusUpdated)
+
+   socket.on("payment:updated", handlePaymentStatusUpdated)
+
+    return () => {
+      socket.off("order:created", handleOrderCreated)
+
+      socket.off("order:status-updated", handleOrderStatusUpdated)
+
+      socket.off("payment:updated", handlePaymentStatusUpdated)
+    }
   }, [])
 
   // ============================================================
